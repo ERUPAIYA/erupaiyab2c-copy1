@@ -35,6 +35,7 @@ void main() {
         isLoading: false,
         isSubmitting: false,
         pendingMobile: '9552529513',
+        hasTemporaryAccess: false,
       );
 
       when(() => mockSecureStorage.read(key: 'mobile'))

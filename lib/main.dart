@@ -11,6 +11,8 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'features/profile/controllers/theme_mode_controller.dart';
 // import 'package:no_screenshot/no_screenshot.dart';
 
+import 'features/profile/models/transaction_history_entry.dart';
+import 'features/profile/views/transaction_detail_screen.dart';
 import 'router.dart';
 import 'services/app_lock_service.dart';
 import 'services/in_app_update_service.dart';
@@ -92,61 +94,99 @@ class MyApp extends HookConsumerWidget {
       PushNotificationService.markUiReady();
       return null;
     }, const []);
+    
+    // UI TEST MODE
     return ScreenUtilInit(
-      designSize: const Size(360, 690),
+      designSize: const Size(440, 978),
       minTextAdapt: true,
       splitScreenMode: true,
-      child: MaterialApp.router(
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        builder: (context, child) {
-          return Listener(
-            behavior: HitTestBehavior.translucent,
-            onPointerDown: (_) => appLockService.onUserActivity(),
-            child: Stack(
-              children: [
-                child ?? const SizedBox.shrink(),
-                if (navigationInteractionLock.isLocked)
-                  const Positioned.fill(
-                    child: AbsorbPointer(
-                      absorbing: true,
-                      child: ColoredBox(color: Colors.transparent),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-        scaffoldMessengerKey: AppSnackbar.messengerKey,
-        title: 'eRupaiya',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color.fromARGB(255, 203, 137, 115)),
-          textTheme: GoogleFonts.plusJakartaSansTextTheme(
-            ThemeData.light().textTheme,
-          ),
-          primaryTextTheme: GoogleFonts.plusJakartaSansTextTheme(
-            ThemeData.light().primaryTextTheme,
-          ),
           fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
-          extensions: const [
-            SkeletonizerConfigData(),
-          ],
+          scaffoldBackgroundColor: Colors.white,
         ),
-        darkTheme: ThemeData(
-          brightness: Brightness.dark,
-          textTheme: GoogleFonts.plusJakartaSansTextTheme(
-            ThemeData.dark().textTheme,
+        home: const _TransactionUITestEntry(),
+      ),
+    );
+  }
+}
+
+class _TransactionUITestEntry extends HookWidget {
+  const _TransactionUITestEntry();
+  @override
+  Widget build(BuildContext context) {
+    final statusIndex = useState(0);
+    final statuses = ['PENDING', 'REFUND_PENDING', 'REFUNDED', 'FAILED'];
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Expanded(
+            child: TransactionDetailScreen(
+              entry: TransactionHistoryEntry(
+                paymentStatus: statuses[statusIndex.value],
+                paymentType: 'Education Fees',
+                billerName: 'MSEDCL Maharashtra...',
+                maskedIdentifier: '049338085841',
+                amount: '160.00',
+                platformFees: '0',
+                totalAmountCharged: '160.00',
+                customerMobile: '9876543210',
+                iconUrl: '',
+                pgTransactionId: '32047646601170534...',
+                ecoinsTransactionId: '32047646601170534...',
+                transactionId: '32047646601170534...',
+                bankReferenceId: '32047646601170534...',
+                referenceId: '32047646601170534...',
+                transactionTime: '3 June 2026, 1:48pm',
+                method: 'UPI/GPay',
+                methodIcon: '',
+                paymentMode: 'UPI',
+                vpa: 'test@upi',
+                rrn: '1234567890',
+                amountBreakdown: {
+                  'Recharge Amount': '₹175',
+                  'eCoins': '-₹15',
+                  'Total': '₹160',
+                },
+              ),
+              doneLabel: statuses[statusIndex.value] == 'PENDING' ? 'Done' : 'Retry',
+            ),
           ),
-          primaryTextTheme: GoogleFonts.plusJakartaSansTextTheme(
-            ThemeData.dark().primaryTextTheme,
+          SafeArea(
+            top: false,
+            child: Container(
+              color: Colors.black.withOpacity(0.05),
+              padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(statuses.length, (index) {
+                  final isSelected = statusIndex.value == index;
+                  return GestureDetector(
+                    onTap: () => statusIndex.value = index,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.blue : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        statuses[index].replaceAll('_', ' '),
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color: isSelected ? Colors.white : Colors.black87,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
           ),
-          fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
-          extensions: const [
-            SkeletonizerConfigData.dark(),
-          ],
-        ),
-        themeMode: themeMode,
-        routerConfig: router,
+        ],
       ),
     );
   }

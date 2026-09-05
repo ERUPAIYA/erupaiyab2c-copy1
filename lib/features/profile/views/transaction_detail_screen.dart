@@ -121,18 +121,13 @@ class TransactionDetailScreen extends StatelessWidget {
     final detailRows = <_DetailValueRow>[
       _DetailValueRow(label: 'Amount', value: _formatAmount(totalAmount)),
       _DetailValueRow(label: 'Payment Method', value: paymentMethod),
-      if (pgTxnId.isNotEmpty)
-        _DetailValueRow(
-          label: 'PG Transaction ID',
-          value: pgTxnId,
-          copyable: true,
-        ),
-      if (walletTxnId.isNotEmpty)
-        _DetailValueRow(
-          label: 'Wallet Transaction ID',
-          value: walletTxnId,
-          copyable: true,
-        ),
+      _DetailValueRow(
+        label: 'Transaction ID',
+        value: pgTxnId.isNotEmpty
+            ? pgTxnId
+            : (walletTxnId.isNotEmpty ? walletTxnId : txnId),
+        copyable: true,
+      ),
       if (refId.isNotEmpty)
         _DetailValueRow(
           label: 'Reference ID',
@@ -174,52 +169,41 @@ class TransactionDetailScreen extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final hasStatusMessage = statusMeta.message.isNotEmpty;
-          final topPadding = MediaQuery.of(context).padding.top;
-          final headerTop = topPadding + 40.h;
-          final headerHorizontalPadding = 24.w;
-          final sectionGap = 10.h;
-          final titleToDateGap = 4.h;
-          final headerWidth =
-              constraints.maxWidth - (headerHorizontalPadding * 2);
+          final headerTop = 101.h; // As per Figma "Top: 101px"
+          final headerHorizontalPadding = 24.w; // As per Figma "Left: 24px"
+          final sectionGap = 16.h; // As per Figma "Gap: 16px"
+          final titleToDateGap = 8.h;
+          final headerWidth = 393.w; // As per Figma "Width: 393px"
+          
           final titleStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
-                    fontSize: 17.sp,
+                    fontSize: 20.sp,
                   ) ??
               TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
-                fontSize: 17.sp,
+                fontSize: 20.sp,
               );
           final dateStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 10.5.sp,
+                    fontSize: 12.sp,
                   ) ??
               TextStyle(
                 color: Colors.white.withOpacity(0.9),
-                fontSize: 10.5.sp,
+                fontSize: 12.sp,
               );
           final messageStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.white,
-                    height: 1.45,
-                    fontSize: 9.5.sp,
+                    height: 1.5,
+                    fontSize: 11.sp,
                   ) ??
               TextStyle(
                 color: Colors.white,
-                height: 1.45,
-                fontSize: 9.5.sp,
+                height: 1.5,
+                fontSize: 11.sp,
               );
-          final messageTitleStyle =
-              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10.5.sp,
-                      ) ??
-                  TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 10.5.sp,
-                  );
+          
           final titleHeight = _measureTextHeight(
             context,
             text: statusMeta.title,
@@ -237,36 +221,24 @@ class TransactionDetailScreen extends StatelessWidget {
                   context,
                   text: statusMeta.message,
                   style: messageStyle,
-                  maxWidth: headerWidth - 24.w,
+                  maxWidth: headerWidth - 40.w,
                 )
               : 0.0;
-          final messageTitleHeight =
-              hasStatusMessage && statusMeta.messageTitle.isNotEmpty
-                  ? _measureTextHeight(
-                      context,
-                      text: statusMeta.messageTitle,
-                      style: messageTitleStyle,
-                      maxWidth: headerWidth - 42.w,
-                    )
-                  : 0.0;
-          final messageContainerHeight = hasStatusMessage
-              ? messageHeight +
-                  (statusMeta.messageTitle.isNotEmpty
-                      ? messageTitleHeight + 8.h
-                      : 0.0) +
-                  18.h
-              : 0.0;
-          final headerContentHeight = 52.h +
-              sectionGap +
-              titleHeight +
-              titleToDateGap +
-              dateHeight +
-              (hasStatusMessage ? sectionGap + messageContainerHeight : 0.0);
-          final cardTop = headerTop + headerContentHeight + sectionGap;
-          final minHeaderHeight = 220.h;
-          final computedHeaderHeight = cardTop + 24.h;
-          final headerHeight = computedHeaderHeight < minHeaderHeight
-              ? minHeaderHeight
+          
+          // Reverting to dynamic header height calculation based on content
+          final headerContentHeight = 64.w + 
+              sectionGap + 
+              titleHeight + 
+              titleToDateGap + 
+              dateHeight + 
+              (hasStatusMessage ? sectionGap + (hasStatusMessage ? 88.h : 0.0) : 0.0);
+          
+          final cardTop = headerTop + headerContentHeight + 16.h;
+          
+          const minHeaderHeight = 360.0;
+          final computedHeaderHeight = cardTop + 40.h;
+          final headerHeight = computedHeaderHeight < minHeaderHeight.h
+              ? minHeaderHeight.h
               : computedHeaderHeight;
 
           return Stack(
@@ -324,89 +296,35 @@ class TransactionDetailScreen extends StatelessWidget {
                   children: [
                     Image.asset(
                       statusMeta.iconAsset,
-                      width: 52.w,
-                      height: 52.w,
+                      width: 64.w,
+                      height: 64.w,
                       fit: BoxFit.contain,
                     ),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 16.h),
                     Text(
                       statusMeta.title,
                       textAlign: TextAlign.center,
                       style: titleStyle,
                     ),
-                    SizedBox(height: titleToDateGap),
+                    SizedBox(height: 8.h),
                     Text(
                       _formatHeaderDate(tx.transactionTime),
                       textAlign: TextAlign.center,
                       style: dateStyle,
                     ),
                     if (statusMeta.message.isNotEmpty) ...[
-                      SizedBox(height: sectionGap),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 9.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: statusMeta.messageBackgroundColor,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Column(
-                          children: [
-                            if (statusMeta.messageTitle.isNotEmpty) ...[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 8.w,
-                                    height: 8.w,
-                                    decoration: BoxDecoration(
-                                      gradient: statusMeta
-                                              .messageIndicatorGradient
-                                              .isNotEmpty
-                                          ? LinearGradient(
-                                              colors: statusMeta
-                                                  .messageIndicatorGradient,
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                            )
-                                          : null,
-                                      color: statusMeta
-                                              .messageIndicatorGradient.isEmpty
-                                          ? Colors.white
-                                          : null,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  SizedBox(width: 6.w),
-                                  Flexible(
-                                    child: Text(
-                                      statusMeta.messageTitle,
-                                      textAlign: TextAlign.center,
-                                      style: messageTitleStyle,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8.h),
-                            ],
-                            Text(
-                              statusMeta.message,
-                              textAlign: TextAlign.center,
-                              style: messageStyle,
-                            ),
-                          ],
-                        ),
+                      SizedBox(height: 16.h),
+                      _StatusMessageBox(
+                        statusMeta: statusMeta,
+                        messageStyle: messageStyle,
                       ),
                     ],
                   ],
                 ),
               ),
               Positioned(
-                left: 22.w,
-                right: 22.w,
+                left: 24.w,
+                right: 23.w, // designSize is 440, so 440 - 24 - 393 = 23
                 top: cardTop,
                 bottom: 0,
                 child: SafeArea(
@@ -424,7 +342,7 @@ class TransactionDetailScreen extends StatelessWidget {
                                 detailRows: detailRows,
                                 breakdownRows: breakdownRows,
                               ),
-                              SizedBox(height: 14.h),
+                              SizedBox(height: 20.h),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
@@ -469,32 +387,43 @@ class TransactionDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      CustomElevatedButton(
-                        onPressed: effectiveOnDone ?? () => context.pop(),
-                        label: doneLabel,
-                        uppercaseLabel: false,
-                        showArrow: false,
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: CustomElevatedButton(
+                          onPressed: effectiveOnDone ?? () => context.pop(),
+                          label: doneLabel,
+                          uppercaseLabel: false,
+                          showArrow: false,
+                        ),
                       ),
-                      SizedBox(height: 10.h),
+                      SizedBox(height: 16.h),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'powered by',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.black,
-                                    ),
+                          SizedBox(
+                            width: 58.w,
+                            height: 25.h,
+                            child: Text(
+                              'powered by',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.black,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w500,
+                                    height: 2.5, // To match 25px line-height for 10px font
+                                  ),
+                            ),
                           ),
-                          SizedBox(width: 6.w),
+                          SizedBox(width: 4.w),
                           Image.asset(
                             FileConstants.bharatConnectColor,
-                            height: 16.h,
+                            width: 52.w,
+                            height: 24.h,
                             fit: BoxFit.contain,
                           ),
                         ],
                       ),
-                      SizedBox(height: 8.h),
+                      SizedBox(height: 20.h),
                     ],
                   ),
                 ),
@@ -587,15 +516,32 @@ class _TransactionResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 10.h),
+      width: 393.w,
+      // Removed fixed height to "Hug Content" and avoid scrolling issues
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18.r),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
+            color: const Color(0x1AC2C2C2),
+            blurRadius: 24.r,
+            offset: Offset(0, 11.h),
+          ),
+          BoxShadow(
+            color: const Color(0x17C2C2C2),
+            blurRadius: 43.r,
+            offset: Offset(0, 43.h),
+          ),
+          BoxShadow(
+            color: const Color(0x0DC2C2C2),
+            blurRadius: 58.r,
+            offset: Offset(0, 97.h),
+          ),
+          BoxShadow(
+            color: const Color(0x03C2C2C2),
+            blurRadius: 69.r,
+            offset: Offset(0, 173.h),
           ),
         ],
       ),
@@ -612,7 +558,7 @@ class _TransactionResultCard extends StatelessWidget {
                   alignEnd: false,
                 ),
               ),
-              SizedBox(width: 10.w),
+              SizedBox(width: 12.w),
               Expanded(
                 child: _CardHeading(
                   label: secondaryParam.label,
@@ -622,22 +568,22 @@ class _TransactionResultCard extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(height: 10.h),
+          Divider(color: AppColors.lightBorder.withOpacity(0.5), height: 1.h),
           SizedBox(height: 8.h),
-          Divider(color: AppColors.lightBorder.withOpacity(0.75), height: 1),
-          SizedBox(height: 6.h),
           ...detailRows.map(
             (row) => _CardDetailRow(
               row: row,
               fullWidthValueAlignment: true,
             ),
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: 6.h),
           Text(
             'Amount Breakdown',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
-                  fontSize: 11.5.sp,
+                  fontSize: 13.sp,
                 ),
           ),
           SizedBox(height: 4.h),
@@ -675,11 +621,12 @@ class _CardHeading extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textPrimary.withOpacity(0.75),
-                fontSize: 9.5.sp,
+                color: AppColors.textPrimary.withOpacity(0.6),
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w400,
               ),
         ),
-        SizedBox(height: 3.h),
+        SizedBox(height: 4.h),
         Text(
           value,
           textAlign: alignEnd ? TextAlign.right : TextAlign.left,
@@ -688,7 +635,7 @@ class _CardHeading extends StatelessWidget {
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
-                fontSize: 11.5.sp,
+                fontSize: 12.sp,
               ),
         ),
       ],
@@ -720,12 +667,11 @@ class _CardDetailRow extends StatelessWidget {
             child: Text(
               row.label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: row.emphasize
-                        ? AppColors.textPrimary
-                        : AppColors.textPrimary.withOpacity(0.85),
+                    color: Colors.black,
                     fontWeight:
-                        row.emphasize ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 10.5.sp,
+                        row.emphasize ? FontWeight.w700 : FontWeight.w400,
+                    fontSize: 14.sp,
+                    height: 1.0,
                   ),
             ),
           ),
@@ -742,10 +688,11 @@ class _CardDetailRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textPrimary,
+                          color: Colors.black,
                           fontWeight:
-                              row.emphasize ? FontWeight.w700 : FontWeight.w600,
-                          fontSize: 10.5.sp,
+                              row.emphasize ? FontWeight.w700 : FontWeight.w400,
+                          fontSize: 14.sp,
+                          height: 1.0,
                         ),
                   ),
                 ),
@@ -813,43 +760,120 @@ class _ResultActionButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16.r),
       child: SizedBox(
-        width: 96.w,
+        width: 120.w,
+        height: 83.h,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 44.w,
-              height: 44.w,
+              width: 52.w, // Standard branded icon size
+              height: 52.w,
               decoration: const BoxDecoration(
-                color: Color(0xFFFFEFE8),
+                color: Color(0xFFFDEEE7),
                 shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x0F000000),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
               ),
               child: Icon(
                 icon,
-                color: AppColors.primary,
-                size: 18.sp,
+                color: const Color(0xFFD65228),
+                size: 24.sp,
               ),
             ),
-            SizedBox(height: 6.h),
+            SizedBox(height: 8.h),
             Text(
               label,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontSize: 9.sp,
+                    color: Colors.black,
+                    fontSize: 10.sp, // Reduced font size to match design
+                    fontWeight: FontWeight.w500,
                     height: 1.2,
                   ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatusMessageBox extends StatelessWidget {
+  const _StatusMessageBox({
+    required this.statusMeta,
+    required this.messageStyle,
+  });
+
+  final _StatusMeta statusMeta;
+  final TextStyle messageStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasTitle = statusMeta.messageTitle.isNotEmpty;
+    // Restoring the "perfect" sizing: 80h for Pending, 88h for Refund/Failed
+    final boxHeight = hasTitle ? 88.h : 80.h;
+    
+    return Container(
+      width: 393.w,
+      height: boxHeight,
+      padding: EdgeInsets.only(
+        top: 10.h,
+        right: 16.w,
+        bottom: 10.h,
+        left: 16.w,
+      ),
+      decoration: BoxDecoration(
+        color: statusMeta.messageBackgroundColor,
+        borderRadius: BorderRadius.circular(10.r),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (hasTitle) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 10.w,
+                  height: 10.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: statusMeta.messageIndicatorGradient.isNotEmpty
+                        ? LinearGradient(
+                            colors: statusMeta.messageIndicatorGradient,
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          )
+                        : null,
+                    color: statusMeta.messageIndicatorGradient.isEmpty
+                        ? Colors.white
+                        : null,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Flexible(
+                  child: Text(
+                    statusMeta.messageTitle,
+                    textAlign: TextAlign.center,
+                    style: messageStyle.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 6.h),
+          ],
+          Text(
+            statusMeta.message,
+            textAlign: TextAlign.center,
+            style: messageStyle.copyWith(
+              fontSize: 11.sp,
+              height: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -925,24 +949,24 @@ _StatusMeta _statusMeta(
         title: 'Transaction Pending',
         iconAsset: FileConstants.pendingIcon,
         gradient: const [
-          Color(0xFFD3A30E),
-          Color(0xFFD3A30E),
-          Color(0xFF844E07),
-          Color(0xFFD3A30E),
+          Color(0xFFB08900),
+          Color(0xFFB08900),
+          Color(0xFF6B4E00),
+          Color(0xFF5D3A00),
         ],
         message:
             'Your transaction is currently pending. Please wait a few moments while we confirm your payment status. If the amount has been deducted, it will be updated shortly.',
-        messageBackgroundColor: const Color(0xFF5D3A00),
+        messageBackgroundColor: const Color(0x80000000),
       );
     case 'REFUND_PENDING':
       return _StatusMeta(
         title: 'Transaction Failed',
         iconAsset: FileConstants.failedIcon,
         gradient: const [
-          Color(0xFFFF5D5D),
-          Color(0xFFC04242),
-          Color(0xFF981919),
-          Color(0xFF8E0303),
+          Color(0xFF8B1919),
+          Color(0xFF8B1919),
+          Color(0xFF6D120E),
+          Color(0xFF6D120E),
         ],
         messageTitle: 'Refund Initiated',
         message:
@@ -951,17 +975,17 @@ _StatusMeta _statusMeta(
           Color(0xFFFB8A67),
           Color(0xFFDD5428),
         ],
-        messageBackgroundColor: const Color(0xFF6D120E),
+        messageBackgroundColor: const Color(0x80000000),
       );
     case 'REFUNDED':
       return _StatusMeta(
         title: 'Transaction Failed',
         iconAsset: FileConstants.failedIcon,
         gradient: const [
-          Color(0xFFFF5D5D),
-          Color(0xFFC04242),
-          Color(0xFF981919),
-          Color(0xFF8E0303),
+          Color(0xFF8B1919),
+          Color(0xFF8B1919),
+          Color(0xFF6D120E),
+          Color(0xFF6D120E),
         ],
         messageTitle: 'Refund Completed',
         message:
@@ -970,7 +994,7 @@ _StatusMeta _statusMeta(
           Color(0xFF60EB97),
           Color(0xFF058337),
         ],
-        messageBackgroundColor: const Color(0xFF6D120E),
+        messageBackgroundColor: const Color(0x80000000),
       );
     case 'FAILED':
     case 'FAIL':
@@ -978,14 +1002,19 @@ _StatusMeta _statusMeta(
         title: 'Transaction Failed',
         iconAsset: FileConstants.failedIcon,
         gradient: const [
-          Color(0xFFFF5D5D),
-          Color(0xFFC04242),
-          Color(0xFF981919),
-          Color(0xFF8E0303),
+          Color(0xFF8B1919),
+          Color(0xFF8B1919),
+          Color(0xFF6D120E),
+          Color(0xFF6D120E),
         ],
+        messageTitle: 'Refund Initiated',
         message:
-            'Unfortunately, your transaction could not be completed. Please check your payment details or try again.',
-        messageBackgroundColor: const Color(0xFF6D120E),
+            'Your transaction failed. A refund of $refundAmount has been initiated and is expected to be credited within 3–5 business days.',
+        messageIndicatorGradient: const [
+          Color(0xFFFB8A67),
+          Color(0xFFDD5428),
+        ],
+        messageBackgroundColor: const Color(0x80000000),
       );
     default:
       return _StatusMeta(

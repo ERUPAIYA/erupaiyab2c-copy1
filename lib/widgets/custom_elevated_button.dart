@@ -97,14 +97,14 @@ class CustomElevatedButton extends StatelessWidget {
                 uppercaseLabel ? label.toUpperCase() : label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: labelColor ?? Colors.white,
-                    letterSpacing: 1.1,
+                    letterSpacing: 1.1.sp,
                     fontWeight: FontWeight.w700),
               ),
               if (showArrow) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Icon(
                   Icons.arrow_forward_rounded,
-                  size: 20,
+                  size: 20.sp,
                   color: labelColor ?? AppColors.white,
                 ),
               ],
