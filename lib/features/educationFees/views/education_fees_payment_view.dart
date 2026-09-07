@@ -53,6 +53,10 @@ class EducationFeesPaymentView extends HookConsumerWidget {
         dialog: EducationPaymentSummarySheet(
           amount: amount,
           onPayNow: (payable) async {
+            // Payment processing is temporarily bypassed for the current static success scenario.
+            // The education status API is called directly to validate the success flow.
+            // TODO: Restore the actual payment flow when the payment integration is enabled.
+            /*
             if (!await RazorpayGuard.ensureProfileReadyAndNotPaused(ref)) {
               return;
             }
@@ -165,6 +169,41 @@ class EducationFeesPaymentView extends HookConsumerWidget {
                 );
               },
             );
+            */
+
+            const staticTransactionId = 'EDU202609050812499782';
+            try {
+              final response = await repository.fetchPaymentStatus(
+                transactionRefId: staticTransactionId,
+              );
+              if (!context.mounted) return;
+              if (response.isSuccess) {
+                context.push(
+                  RouteConstants.transactionDetail,
+                  extra: _buildEducationSuccessEntry(
+                    recipientName: state.recipientName,
+                    maskedAccount: _maskAccount(state.accountNumber),
+                    amount: payable,
+                    paymentId: staticTransactionId,
+                  ),
+                );
+              } else {
+                AppSnackbar.show(
+                  response.message.isNotEmpty
+                      ? response.message
+                      : 'Payment failed or status unknown.',
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                );
+              }
+            } catch (e) {
+              if (!context.mounted) return;
+              AppSnackbar.show(
+                'Failed to verify payment status. Please try again.',
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+              );
+            }
           },
         ),
       );
