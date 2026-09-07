@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../constants/app_colors.dart';
 import '../../../constants/file_constants.dart';
@@ -69,6 +70,7 @@ class TransactionDetailScreen extends StatelessWidget {
     final statusMeta = _statusMeta(
       status,
       refundAmount: _formatAmount(totalAmount),
+      paymentType: tx.paymentType.trim(),
     );
     final txnId = tx.transactionId.trim();
     final pgTxnId = tx.pgTransactionId.trim();
@@ -168,14 +170,22 @@ class TransactionDetailScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
+          final isSuccess = status == 'SUCCESS';
           final hasStatusMessage = statusMeta.message.isNotEmpty;
-          final headerTop = 101.h; // As per Figma "Top: 101px"
-          final headerHorizontalPadding = 24.w; // As per Figma "Left: 24px"
-          final sectionGap = 16.h; // As per Figma "Gap: 16px"
-          final titleToDateGap = 8.h;
-          final headerWidth = 393.w; // As per Figma "Width: 393px"
           
-          final titleStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+          final headerTop = isSuccess ? 111.h : 101.h; 
+          final headerHorizontalPadding = 24.w;
+          final sectionGap = 16.h;
+          final titleToDateGap = isSuccess ? 12.h : 8.h;
+          final headerWidth = 393.w;
+          
+          final titleStyle = isSuccess 
+            ? GoogleFonts.playfairDisplay(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 24.sp,
+              )
+            : Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 20.sp,
@@ -208,7 +218,7 @@ class TransactionDetailScreen extends StatelessWidget {
             context,
             text: statusMeta.title,
             style: titleStyle,
-            maxWidth: headerWidth,
+            maxWidth: isSuccess ? 287.w : headerWidth,
           );
           final dateHeight = _measureTextHeight(
             context,
@@ -216,67 +226,67 @@ class TransactionDetailScreen extends StatelessWidget {
             style: dateStyle,
             maxWidth: headerWidth,
           );
-          final messageHeight = hasStatusMessage
-              ? _measureTextHeight(
-                  context,
-                  text: statusMeta.message,
-                  style: messageStyle,
-                  maxWidth: headerWidth - 40.w,
-                )
-              : 0.0;
           
-          // Reverting to dynamic header height calculation based on content
-          final headerContentHeight = 64.w + 
-              sectionGap + 
-              titleHeight + 
-              titleToDateGap + 
-              dateHeight + 
-              (hasStatusMessage ? sectionGap + (hasStatusMessage ? 88.h : 0.0) : 0.0);
+          // SUCCESS Specific elements heights
+          final amountPillHeight = isSuccess ? 40.h : 0.0;
           
-          final cardTop = headerTop + headerContentHeight + 16.h;
+          final headerContentHeight = isSuccess 
+              ? (64.w + 20.h + titleHeight + 16.h + amountPillHeight + titleToDateGap + dateHeight)
+              : (64.w + sectionGap + titleHeight + titleToDateGap + dateHeight + (hasStatusMessage ? sectionGap + 88.h : 0.0));
+          
+          final cardTop = isSuccess ? 419.h : (headerTop + headerContentHeight + 16.h);
           
           const minHeaderHeight = 360.0;
-          final computedHeaderHeight = cardTop + 40.h;
+          final computedHeaderHeight = isSuccess ? 380.h : (cardTop + 40.h);
           final headerHeight = computedHeaderHeight < minHeaderHeight.h
               ? minHeaderHeight.h
               : computedHeaderHeight;
 
           return Stack(
+            clipBehavior: Clip.none,
             children: [
-              Column(
-                children: [
-                  Container(
-                    height: headerHeight,
-                    decoration: const BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(28),
-                        bottomRight: Radius.circular(28),
+              if (isSuccess)
+                // Ellipse 30 Design for Success Only
+                Positioned(
+                  top: -369.h,
+                  left: -199.w,
+                  child: Container(
+                    width: 838.w,
+                    height: 756.h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.elliptical(419.w, 378.h),
+                      ),
+                      gradient: LinearGradient(
+                        colors: statusMeta.gradient,
+                        stops: const [0.0, 0.3446, 0.9055, 1.0],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(28),
-                        bottomRight: Radius.circular(28),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: statusMeta.gradient,
-                            stops: statusMeta.gradient.length == 4
-                                ? const [0.0, 0.3446, 0.9055, 1.0]
-                                : null,
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
+                  ),
+                )
+              else
+                // Original Header for other states
+                Column(
+                  children: [
+                    Container(
+                      height: headerHeight,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: statusMeta.gradient,
+                          stops: const [0.0, 0.3446, 0.9055, 1.0],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(28),
+                          bottomRight: Radius.circular(28),
                         ),
                       ),
                     ),
-                  ),
-                  const Expanded(
-                    child: ColoredBox(color: Colors.white),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               Positioned(
                 left: 12.w,
                 top: MediaQuery.of(context).padding.top + 8.h,
@@ -300,19 +310,43 @@ class TransactionDetailScreen extends StatelessWidget {
                       height: 64.w,
                       fit: BoxFit.contain,
                     ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      statusMeta.title,
-                      textAlign: TextAlign.center,
-                      style: titleStyle,
+                    SizedBox(height: isSuccess ? 20.h : 16.h),
+                    SizedBox(
+                      width: isSuccess ? 287.w : headerWidth,
+                      child: Text(
+                        statusMeta.title,
+                        textAlign: TextAlign.center,
+                        style: titleStyle,
+                      ),
                     ),
-                    SizedBox(height: 8.h),
+                    if (isSuccess) ...[
+                      SizedBox(height: 16.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 8.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Text(
+                          _formatAmount(totalAmount),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: const Color(0xFF0C602D),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18.sp,
+                              ),
+                        ),
+                      ),
+                    ],
+                    SizedBox(height: titleToDateGap),
                     Text(
                       _formatHeaderDate(tx.transactionTime),
                       textAlign: TextAlign.center,
                       style: dateStyle,
                     ),
-                    if (statusMeta.message.isNotEmpty) ...[
+                    if (!isSuccess && statusMeta.message.isNotEmpty) ...[
                       SizedBox(height: 16.h),
                       _StatusMessageBox(
                         statusMeta: statusMeta,
@@ -341,48 +375,51 @@ class TransactionDetailScreen extends StatelessWidget {
                                 secondaryParam: secondaryParam,
                                 detailRows: detailRows,
                                 breakdownRows: breakdownRows,
+                                isSuccess: isSuccess,
                               ),
-                              SizedBox(height: 20.h),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _ResultActionButton(
-                                    icon: Icons.headset_mic_outlined,
-                                    label: 'Contact Support',
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              CreateSupportTicketScreen(
-                                            transaction: supportTransaction,
+                              SizedBox(height: isSuccess ? 40.h : 20.h),
+                              if (!isSuccess) ...[
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _ResultActionButton(
+                                      icon: Icons.headset_mic_outlined,
+                                      label: 'Contact Support',
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                CreateSupportTicketScreen(
+                                              transaction: supportTransaction,
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  _ResultActionButton(
-                                    icon: Icons.share_outlined,
-                                    label: 'Share Receipt',
-                                    onTap: () =>
-                                        ReceiptActions.handleReceiptAction(
-                                      context,
-                                      transactionId: receiptId,
-                                      action: ReceiptAction.share,
+                                        );
+                                      },
                                     ),
-                                  ),
-                                  _ResultActionButton(
-                                    icon: Icons.receipt_long_outlined,
-                                    label: 'Download Receipt',
-                                    onTap: () =>
-                                        ReceiptActions.handleReceiptAction(
-                                      context,
-                                      transactionId: receiptId,
-                                      action: ReceiptAction.download,
+                                    _ResultActionButton(
+                                      icon: Icons.share_outlined,
+                                      label: 'Share Receipt',
+                                      onTap: () =>
+                                          ReceiptActions.handleReceiptAction(
+                                        context,
+                                        transactionId: receiptId,
+                                        action: ReceiptAction.share,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
+                                    _ResultActionButton(
+                                      icon: Icons.receipt_long_outlined,
+                                      label: 'Download Receipt',
+                                      onTap: () =>
+                                          ReceiptActions.handleReceiptAction(
+                                        context,
+                                        transactionId: receiptId,
+                                        action: ReceiptAction.download,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -506,97 +543,103 @@ class _TransactionResultCard extends StatelessWidget {
     required this.secondaryParam,
     required this.detailRows,
     required this.breakdownRows,
+    this.isSuccess = false,
   });
 
   final TransactionCustomerParam primaryParam;
   final TransactionCustomerParam secondaryParam;
   final List<_DetailValueRow> detailRows;
   final List<_DetailValueRow> breakdownRows;
+  final bool isSuccess;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 393.w,
-      // Removed fixed height to "Hug Content" and avoid scrolling issues
+      width: isSuccess ? 392.w : 393.w,
+      height: isSuccess ? 340.h : null, // Reduced height as requested
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x1AC2C2C2),
-            blurRadius: 24.r,
-            offset: Offset(0, 11.h),
-          ),
-          BoxShadow(
-            color: const Color(0x17C2C2C2),
-            blurRadius: 43.r,
-            offset: Offset(0, 43.h),
-          ),
-          BoxShadow(
-            color: const Color(0x0DC2C2C2),
-            blurRadius: 58.r,
-            offset: Offset(0, 97.h),
-          ),
-          BoxShadow(
-            color: const Color(0x03C2C2C2),
-            blurRadius: 69.r,
-            offset: Offset(0, 173.h),
-          ),
-        ],
+        color: isSuccess ? const Color(0xFFEFEFEF) : Colors.white,
+        borderRadius: BorderRadius.circular(isSuccess ? 20.r : 12.r),
+        boxShadow: isSuccess 
+            ? null 
+            : [
+                BoxShadow(
+                  color: const Color(0x1AC2C2C2),
+                  blurRadius: 24.r,
+                  offset: Offset(0, 11.h),
+                ),
+                BoxShadow(
+                  color: const Color(0x17C2C2C2),
+                  blurRadius: 43.r,
+                  offset: Offset(0, 43.h),
+                ),
+                BoxShadow(
+                  color: const Color(0x0DC2C2C2),
+                  blurRadius: 58.r,
+                  offset: Offset(0, 97.h),
+                ),
+                BoxShadow(
+                  color: const Color(0x03C2C2C2),
+                  blurRadius: 69.r,
+                  offset: Offset(0, 173.h),
+                ),
+              ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: isSuccess 
+        ? const SizedBox.shrink() 
+        : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _CardHeading(
-                  label: primaryParam.label,
-                  value: primaryParam.value,
-                  alignEnd: false,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _CardHeading(
+                      label: primaryParam.label,
+                      value: primaryParam.value,
+                      alignEnd: false,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: _CardHeading(
+                      label: secondaryParam.label,
+                      value: secondaryParam.value,
+                      alignEnd: true,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10.h),
+              Divider(color: AppColors.lightBorder.withOpacity(0.5), height: 1.h),
+              SizedBox(height: 8.h),
+              ...detailRows.map(
+                (row) => _CardDetailRow(
+                  row: row,
+                  fullWidthValueAlignment: true,
                 ),
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _CardHeading(
-                  label: secondaryParam.label,
-                  value: secondaryParam.value,
-                  alignEnd: true,
+              SizedBox(height: 6.h),
+              Text(
+                'Amount Breakdown',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13.sp,
+                    ),
+              ),
+              SizedBox(height: 4.h),
+              ...breakdownRows.map(
+                (row) => _CardDetailRow(
+                  row: row,
+                  fullWidthValueAlignment: true,
+                  showTopDivider: row.emphasize,
+                  horizontalInset: row.emphasize ? 0 : null,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 10.h),
-          Divider(color: AppColors.lightBorder.withOpacity(0.5), height: 1.h),
-          SizedBox(height: 8.h),
-          ...detailRows.map(
-            (row) => _CardDetailRow(
-              row: row,
-              fullWidthValueAlignment: true,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            'Amount Breakdown',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13.sp,
-                ),
-          ),
-          SizedBox(height: 4.h),
-          ...breakdownRows.map(
-            (row) => _CardDetailRow(
-              row: row,
-              fullWidthValueAlignment: true,
-              showTopDivider: row.emphasize,
-              horizontalInset: row.emphasize ? 0 : null,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -930,11 +973,12 @@ class _StatusMeta {
 _StatusMeta _statusMeta(
   String status, {
   required String refundAmount,
+  required String paymentType,
 }) {
-  switch (status) {
+  switch (status.toUpperCase()) {
     case 'SUCCESS':
       return _StatusMeta(
-        title: 'Transaction Successful',
+        title: 'Thank You for $paymentType Payment',
         iconAsset: FileConstants.successIcon,
         gradient: const [
           Color(0xFF004C1E),
@@ -958,14 +1002,15 @@ _StatusMeta _statusMeta(
             'Your transaction is currently pending. Please wait a few moments while we confirm your payment status. If the amount has been deducted, it will be updated shortly.',
         messageBackgroundColor: const Color(0x80000000),
       );
+    case 'FAILED':
     case 'REFUND_PENDING':
       return _StatusMeta(
         title: 'Transaction Failed',
         iconAsset: FileConstants.failedIcon,
         gradient: const [
+          Color(0xFFB3261E),
           Color(0xFF8B1919),
-          Color(0xFF8B1919),
-          Color(0xFF6D120E),
+          Color(0xFF7D1A15),
           Color(0xFF6D120E),
         ],
         messageTitle: 'Refund Initiated',
@@ -982,9 +1027,9 @@ _StatusMeta _statusMeta(
         title: 'Transaction Failed',
         iconAsset: FileConstants.failedIcon,
         gradient: const [
+          Color(0xFFB3261E),
           Color(0xFF8B1919),
-          Color(0xFF8B1919),
-          Color(0xFF6D120E),
+          Color(0xFF7D1A15),
           Color(0xFF6D120E),
         ],
         messageTitle: 'Refund Completed',
@@ -993,26 +1038,6 @@ _StatusMeta _statusMeta(
         messageIndicatorGradient: const [
           Color(0xFF60EB97),
           Color(0xFF058337),
-        ],
-        messageBackgroundColor: const Color(0x80000000),
-      );
-    case 'FAILED':
-    case 'FAIL':
-      return _StatusMeta(
-        title: 'Transaction Failed',
-        iconAsset: FileConstants.failedIcon,
-        gradient: const [
-          Color(0xFF8B1919),
-          Color(0xFF8B1919),
-          Color(0xFF6D120E),
-          Color(0xFF6D120E),
-        ],
-        messageTitle: 'Refund Initiated',
-        message:
-            'Your transaction failed. A refund of $refundAmount has been initiated and is expected to be credited within 3–5 business days.',
-        messageIndicatorGradient: const [
-          Color(0xFFFB8A67),
-          Color(0xFFDD5428),
         ],
         messageBackgroundColor: const Color(0x80000000),
       );

@@ -117,7 +117,7 @@ class _TransactionUITestEntry extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final statusIndex = useState(0);
-    final statuses = ['PENDING', 'REFUND_PENDING', 'REFUNDED', 'FAILED'];
+    final statuses = ['PENDING', 'FAILED', 'REFUND_PENDING', 'REFUNDED', 'SUCCESS'];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -127,12 +127,12 @@ class _TransactionUITestEntry extends HookWidget {
             child: TransactionDetailScreen(
               entry: TransactionHistoryEntry(
                 paymentStatus: statuses[statusIndex.value],
-                paymentType: 'Education Fees',
+                paymentType: 'Education',
                 billerName: 'MSEDCL Maharashtra...',
                 maskedIdentifier: '049338085841',
-                amount: '160.00',
+                amount: '1000.00',
                 platformFees: '0',
-                totalAmountCharged: '160.00',
+                totalAmountCharged: '1000.00',
                 customerMobile: '9876543210',
                 iconUrl: '',
                 pgTransactionId: '32047646601170534...',
@@ -147,42 +147,50 @@ class _TransactionUITestEntry extends HookWidget {
                 vpa: 'test@upi',
                 rrn: '1234567890',
                 amountBreakdown: {
-                  'Recharge Amount': '₹175',
+                  'Recharge Amount': '₹1015',
                   'eCoins': '-₹15',
-                  'Total': '₹160',
+                  'Total': '₹1000',
                 },
               ),
-              doneLabel: statuses[statusIndex.value] == 'PENDING' ? 'Done' : 'Retry',
+              doneLabel: 'Done',
             ),
           ),
           SafeArea(
             top: false,
-            child: Container(
-              color: Colors.black.withOpacity(0.05),
-              padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(statuses.length, (index) {
-                  final isSelected = statusIndex.value == index;
-                  return GestureDetector(
-                    onTap: () => statusIndex.value = index,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.blue : Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Text(
-                        statuses[index].replaceAll('_', ' '),
-                        style: TextStyle(
-                          fontSize: 10.sp,
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Container(
+                color: Colors.black.withOpacity(0.05),
+                padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+                child: Row(
+                  children: List.generate(statuses.length, (index) {
+                    final isSelected = statusIndex.value == index;
+                    String label = statuses[index].replaceAll('_', ' ');
+                    if (label == 'SUCCESS') label = 'THANK YOU';
+                    
+                    return GestureDetector(
+                      onTap: () => statusIndex.value = index,
+                      child: Container(
+                        margin: EdgeInsets.symmetric(horizontal: 4.w),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                              ? (statuses[index] == 'SUCCESS' ? Colors.green : Colors.blue) 
+                              : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ),
           ),
