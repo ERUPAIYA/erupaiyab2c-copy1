@@ -159,6 +159,37 @@ class EducationPaymentSummaryResponse {
   final String? message;
 }
 
+class EducationCreateOrderRequest {
+  const EducationCreateOrderRequest({
+    required this.recipientName,
+    required this.accountNo,
+    required this.ifsc,
+    required this.amount,
+    this.accountNoUnmasked,
+  });
+
+  final String recipientName;
+  final String accountNo;
+  final String ifsc;
+  final double amount;
+  final String? accountNoUnmasked;
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> map = {
+      'recipient_name': recipientName,
+      'account_no': accountNo,
+      if (accountNoUnmasked != null) 'accountNoUnmasked': accountNoUnmasked,
+      'ifsc': ifsc,
+      'amount': double.parse(amount.toStringAsFixed(2)),
+    };
+    
+    print('========================================================');
+    print('🚀 FINAL API REQUEST BODY JSON: $map');
+    print('========================================================');
+    return map;
+  }
+}
+
 class EducationCreateOrderResponse {
   const EducationCreateOrderResponse({
     required this.status,
@@ -220,11 +251,15 @@ class EducationPaymentStatusResponse {
           }
         : json;
 
+    final paymentStatus = (flattened['payment_status'] ?? flattened['status'] ?? '').toString().trim();
+
+    print('Beneficiary JSON Response: $json');
+
     return EducationPaymentStatusResponse(
       status: json['status'] == true,
       message: (json['message'] ?? '').toString().trim(),
       transactionId: (flattened['transaction_id'] ?? '').toString().trim(),
-      paymentStatus: (flattened['status'] ?? '').toString().trim(),
+      paymentStatus: paymentStatus,
       amount: (flattened['amount'] ?? '').toString().trim(),
       updatedAt: (flattened['updated_at'] ?? '').toString().trim(),
     );
@@ -344,9 +379,11 @@ class EducationBeneficiary {
     required this.panMasked,
     required this.accountMasked,
     required this.ifsc,
+    this.accountNoUnmasked,
   });
 
   factory EducationBeneficiary.fromJson(Map<String, dynamic> json) {
+    print('DEBUG: Parsed Beneficiary JSON - account_no_unmasked: ${json['account_no_unmasked']}');
     return EducationBeneficiary(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
@@ -357,6 +394,7 @@ class EducationBeneficiary {
       panMasked: json['pan_masked']?.toString() ?? '',
       accountMasked: json['account_masked']?.toString() ?? '',
       ifsc: json['ifsc']?.toString() ?? '',
+      accountNoUnmasked: json['account_no_unmasked']?.toString(),
     );
   }
 
@@ -369,6 +407,7 @@ class EducationBeneficiary {
   final String panMasked;
   final String accountMasked;
   final String ifsc;
+  final String? accountNoUnmasked;
 }
 
 class EducationBeneficiariesResponse {

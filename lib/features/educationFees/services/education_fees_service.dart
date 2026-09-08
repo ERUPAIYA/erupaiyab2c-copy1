@@ -156,20 +156,28 @@ class EducationFeesService {
     required String accountNo,
     required String ifsc,
     required double amount,
+    String? accountNoUnmasked,
   }) async {
     try {
       final deviceContext = await const PaymentDeviceContextService().collect();
+      final requestObj = EducationCreateOrderRequest(
+        recipientName: recipientName,
+        accountNo: accountNo,
+        ifsc: ifsc,
+        amount: amount,
+        accountNoUnmasked: accountNoUnmasked,
+      );
+      final body = {
+        ...requestObj.toJson(),
+        ...deviceContext,
+      };
+      print('DEBUG: Create Order Request Body -> $body');
       final response = await _dio.post(
         ApiConstants.educationCreateOrderEndpoint,
-        data: {
-          'recipient_name': recipientName,
-          'account_no': accountNo,
-          'ifsc': ifsc,
-          'amount': double.parse(amount.toStringAsFixed(2)),
-          ...deviceContext,
-        },
+        data: body,
       );
       final payload = response.data as Map<String, dynamic>? ?? {};
+      print('DEBUG: Create Order Response -> $payload');
       return EducationCreateOrderResponse.fromJson(payload);
     } catch (e) {
       if (e is DioException) {
@@ -191,6 +199,9 @@ class EducationFeesService {
         ApiConstants.educationStatusEndpoint(transactionRefId),
       );
       final payload = response.data as Map<String, dynamic>? ?? {};
+      print('DEBUG: Payment Status API URL -> ${ApiConstants.educationStatusEndpoint(transactionRefId)}');
+      print('DEBUG: Payment Status API Full Response -> $payload');
+      print('DEBUG: Payment Status -> payment_status: ${payload['payment_status'] ?? payload['data']?['payment_status'] ?? 'N/A'}, status: ${payload['status']}');
       return EducationPaymentStatusResponse.fromJson(payload);
     } catch (e) {
       if (e is DioException) {

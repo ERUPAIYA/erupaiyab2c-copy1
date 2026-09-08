@@ -10,6 +10,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../constants/app_colors.dart';
 import '../../../constants/routes_constant.dart';
+import '../../../router.dart';
 import '../../../widgets/app_snackbar.dart';
 import '../../../widgets/custom_elevated_button.dart';
 import '../../../widgets/k_dialog.dart';
@@ -63,19 +64,23 @@ class EducationFeesTutorsView extends HookConsumerWidget {
         dialog: EducationPaymentSummarySheet(
           amount: amount,
           onPayNow: (payable) async {
-            // Payment processing is temporarily bypassed for the current static success scenario.
-            // The education status API is called directly to validate the success flow.
-            // TODO: Restore the actual payment flow when the payment integration is enabled.
-            /*
             if (!await RazorpayGuard.ensureProfileReadyAndNotPaused(ref)) {
               return;
             }
             final card = selectedCard.value;
             EducationCreateOrderResponse order;
             try {
+              print('Tutor Name: ${tutor.name}');
+              print('Masked Account: ${tutor.accountMasked}');
+              print('Unmasked Account: ${tutor.accountNoUnmasked}');
+              print('Amount: $payable');
+              print('IFSC: ${tutor.ifsc}');
+              print('========================================================');
+              
               order = await repository.createOrder(
                 recipientName: tutor.name,
                 accountNo: tutor.accountMasked,
+                accountNoUnmasked: tutor.accountNoUnmasked,
                 ifsc: tutor.ifsc,
                 amount: payable,
               );
@@ -105,113 +110,55 @@ class EducationFeesTutorsView extends HookConsumerWidget {
               description: 'Tuition fee payment',
               orderId: order.orderId,
               keyOverride: order.key,
-              onSuccess: (paymentId) async {
-                final verified = await _verifyEducationPaymentStatus(
-                  repository: repository,
-                  transactionRefId: order.transactionRefId,
-                );
-                if (verified == null || !verified.isSuccess) {
-                  if (!context.mounted) return;
-                  AppSnackbar.show(
-                    (verified?.message.isNotEmpty ?? false)
-                        ? verified!.message
-                        : 'Unable to verify payment status. Please try again.',
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                  );
-                  return;
-                }
-
-                try {
-                  await repository.reportPaymentSuccess(
+              onSuccess: (paymentId) {
+                // Navigate IMMEDIATELY using routerProvider as requested
+                ref.read(routerProvider).push(
+                  RouteConstants.transactionDetail,
+                  extra: _buildEducationTransactionEntry(
                     recipientName: tutor.name,
-                    accountNo: tutor.accountMasked,
-                    ifsc: '',
+                    maskedAccount: tutor.accountMasked,
                     amount: order.amount > 0 ? order.amount : payable,
                     paymentId: paymentId,
-                    status: 'success',
-                    cardToken: card?.cardToken ?? '',
-                    last4: card?.last4 ?? '',
-                    cardNetwork: card?.cardNetwork ?? '',
-                    expiryMonth: card?.expiryMonth ?? '',
-                    expiryYear: card?.expiryYear ?? '',
-                  );
-                } catch (_) {}
-                if (context.mounted) {
-                  context.push(
-                    RouteConstants.transactionDetail,
-                    extra: _buildEducationSuccessEntry(
-                      recipientName: tutor.name,
-                      maskedAccount: tutor.accountMasked,
-                      amount: order.amount > 0 ? order.amount : payable,
-                      paymentId: paymentId,
-                    ),
-                  );
-                }
-              },
-              onFailure: (message) async {
-                final verified = await _verifyEducationPaymentStatus(
+                    status: 'SUCCESS',
+                  ),
+                );
+
+                // Background verification (silent)
+                _verifyEducationPaymentStatus(
                   repository: repository,
                   transactionRefId: order.transactionRefId,
-                );
-                if (verified != null && verified.isSuccess) {
-                  if (!context.mounted) return;
-                  context.push(
-                    RouteConstants.transactionDetail,
-                    extra: _buildEducationSuccessEntry(
+                ).then((verified) {
+                  if (verified != null && verified.isSuccess) {
+                    repository.reportPaymentSuccess(
                       recipientName: tutor.name,
-                      maskedAccount: tutor.accountMasked,
+                      accountNo: tutor.accountMasked,
+                      ifsc: '',
                       amount: order.amount > 0 ? order.amount : payable,
-                      paymentId: order.transactionRefId,
-                    ),
-                  );
-                  return;
-                }
-                if (!context.mounted) return;
-                AppSnackbar.show(
-                  (verified?.message.isNotEmpty ?? false)
-                      ? verified!.message
-                      : message,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
+                      paymentId: paymentId,
+                      status: 'success',
+                      cardToken: card?.cardToken ?? '',
+                      last4: card?.last4 ?? '',
+                      cardNetwork: card?.cardNetwork ?? '',
+                      expiryMonth: card?.expiryMonth ?? '',
+                      expiryYear: card?.expiryYear ?? '',
+                    ).catchError((_) {});
+                  }
+                });
+              },
+              onFailure: (message) {
+
+                ref.read(routerProvider).push(
+                  RouteConstants.transactionDetail,
+                  extra: _buildEducationTransactionEntry(
+                    recipientName: tutor.name,
+                    maskedAccount: tutor.accountMasked,
+                    amount: order.amount > 0 ? order.amount : payable,
+                    paymentId: order.transactionRefId,
+                    status: 'FAILED',
+                  ),
                 );
               },
             );
-            */
-
-            const staticTransactionId = 'EDU202609050812499782';
-            try {
-              final response = await repository.fetchPaymentStatus(
-                transactionRefId: staticTransactionId,
-              );
-              if (!context.mounted) return;
-              if (response.isSuccess) {
-                context.push(
-                  RouteConstants.transactionDetail,
-                  extra: _buildEducationSuccessEntry(
-                    recipientName: tutor.name,
-                    maskedAccount: tutor.accountMasked,
-                    amount: payable,
-                    paymentId: staticTransactionId,
-                  ),
-                );
-              } else {
-                AppSnackbar.show(
-                  response.message.isNotEmpty
-                      ? response.message
-                      : 'Payment failed or status unknown.',
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                );
-              }
-            } catch (e) {
-              if (!context.mounted) return;
-              AppSnackbar.show(
-                'Failed to verify payment status. Please try again.',
-                backgroundColor: Colors.red,
-                textColor: Colors.white,
-              );
-            }
           },
         ),
       );
@@ -373,16 +320,20 @@ Future<EducationPaymentStatusResponse?> _verifyEducationPaymentStatus({
   required String transactionRefId,
 }) async {
   if (transactionRefId.trim().isEmpty) return null;
-  var latest =
-      await repository.fetchPaymentStatus(transactionRefId: transactionRefId);
-  if (latest.isSuccess || latest.isFailed) return latest;
+  
+  EducationPaymentStatusResponse? latest;
+  try {
+    latest = await repository.fetchPaymentStatus(transactionRefId: transactionRefId);
+    if (latest.isSuccess || latest.isFailed) return latest;
+  } catch (_) {}
 
   const pollInterval = Duration(seconds: 2);
-  for (var attempt = 0; attempt < 2; attempt++) {
+  for (var attempt = 0; attempt < 5; attempt++) {
     await Future.delayed(pollInterval);
-    latest =
-        await repository.fetchPaymentStatus(transactionRefId: transactionRefId);
-    if (latest.isSuccess || latest.isFailed) return latest;
+    try {
+      latest = await repository.fetchPaymentStatus(transactionRefId: transactionRefId);
+      if (latest.isSuccess || latest.isFailed) return latest;
+    } catch (_) {}
   }
   return latest;
 }
@@ -442,15 +393,16 @@ String _fallbackTutorName(EducationBeneficiary tutor) {
   return 'Beneficiary';
 }
 
-TransactionHistoryEntry _buildEducationSuccessEntry({
+TransactionHistoryEntry _buildEducationTransactionEntry({
   required String recipientName,
   required String maskedAccount,
   required double amount,
   required String paymentId,
+  String status = 'SUCCESS',
 }) {
   final now = DateTime.now().toIso8601String();
   return TransactionHistoryEntry(
-    paymentStatus: 'SUCCESS',
+    paymentStatus: status.toUpperCase(),
     paymentType: 'Education Fees',
     billerName: recipientName.isEmpty ? 'Recipient' : recipientName,
     maskedIdentifier: maskedAccount.isEmpty ? '****' : maskedAccount,
