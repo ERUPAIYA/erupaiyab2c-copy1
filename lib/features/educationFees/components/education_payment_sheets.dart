@@ -234,9 +234,7 @@ class EducationPaymentSummarySheet extends HookConsumerWidget {
     final serviceCharge = current?.serviceCharge ?? 0.0;
     final walletBalance = current?.walletBalance ?? 0.0;
     final walletUsed = walletUsedInput.value.toDouble();
-    final payable = (amount + serviceCharge - walletUsed)
-        .clamp(0, double.infinity)
-        .toDouble();
+    final payable = current?.totalPayable ?? amount;
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return SafeArea(

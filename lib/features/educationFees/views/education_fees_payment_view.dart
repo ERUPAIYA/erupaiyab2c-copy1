@@ -65,7 +65,7 @@ class EducationFeesPaymentView extends HookConsumerWidget {
                 accountNo: state.accountNumber,
                 accountNoUnmasked: state.accountNumber,
                 ifsc: state.ifsc,
-                amount: payable,
+                amount: amount,
               );
             } catch (e) {
               AppSnackbar.show(

@@ -82,7 +82,7 @@ class EducationFeesTutorsView extends HookConsumerWidget {
                 accountNo: tutor.accountMasked,
                 accountNoUnmasked: tutor.accountNoUnmasked,
                 ifsc: tutor.ifsc,
-                amount: payable,
+                amount: amount,
               );
             } catch (e) {
               AppSnackbar.show(
