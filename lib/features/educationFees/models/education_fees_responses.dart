@@ -181,7 +181,7 @@ class EducationCreateOrderRequest {
       'ifsc': ifsc,
       'amount': double.parse(amount.toStringAsFixed(2)),
     };
-    
+
     print('========================================================');
     print('🚀 FINAL API REQUEST BODY JSON: $map');
     print('========================================================');
@@ -250,16 +250,27 @@ class EducationPaymentStatusResponse {
           }
         : json;
 
-    final paymentStatus = (flattened['payment_status'] ?? flattened['status'] ?? '').toString().trim();
+    final paymentStatus =
+        (flattened['payment_status'] ?? flattened['status'] ?? '')
+            .toString()
+            .trim();
 
     print('Beneficiary JSON Response: $json');
+
+    final rawAmount = (flattened['amount'] ??
+            flattened['total_amount'] ??
+            flattened['payable_amount'] ??
+            flattened['total_amount_charged'] ??
+            '')
+        .toString()
+        .trim();
 
     return EducationPaymentStatusResponse(
       status: json['status'] == true,
       message: (json['message'] ?? '').toString().trim(),
       transactionId: (flattened['transaction_id'] ?? '').toString().trim(),
       paymentStatus: paymentStatus,
-      amount: (flattened['amount'] ?? '').toString().trim(),
+      amount: rawAmount,
       updatedAt: (flattened['updated_at'] ?? '').toString().trim(),
     );
   }
@@ -275,6 +286,8 @@ class EducationPaymentStatusResponse {
   bool get isPending => paymentStatus.trim().toUpperCase() == 'PENDING';
   bool get isProcessing => paymentStatus.trim().toUpperCase() == 'PROCESSING';
   bool get isFailed => paymentStatus.trim().toUpperCase() == 'FAILED';
+  bool get hasKnownPaymentStatus =>
+      isSuccess || isFailed || isPending || isProcessing;
 }
 
 class EducationCard {
@@ -382,7 +395,8 @@ class EducationBeneficiary {
   });
 
   factory EducationBeneficiary.fromJson(Map<String, dynamic> json) {
-    print('DEBUG: Parsed Beneficiary JSON - account_no_unmasked: ${json['account_no_unmasked']}');
+    print(
+        'DEBUG: Parsed Beneficiary JSON - account_no_unmasked: ${json['account_no_unmasked']}');
     return EducationBeneficiary(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',

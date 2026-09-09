@@ -83,11 +83,8 @@ class _TransactionHistoryScreenState
             title: 'Transaction History',
             showHelp: true,
             onBack: () {
-              if (context.canPop()) {
-                context.pop();
-                return;
-              }
               ref.read(homeTabControllerProvider).index = 0;
+              context.go(RouteConstants.home);
             },
             onHelp: () {},
           ),

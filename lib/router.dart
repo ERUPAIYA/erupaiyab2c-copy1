@@ -1,4 +1,6 @@
 import 'package:e_rupaiya/features/home/views/home_search_view.dart';
+import 'package:e_rupaiya/widgets/processing_overlay.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -27,6 +29,7 @@ import 'features/digital_gold/views/digital_gold_success_v2_view.dart';
 import 'features/digital_gold/views/digital_gold_success_view.dart';
 import 'features/digital_gold/views/digital_gold_summary_view.dart';
 import 'features/digital_gold/views/digital_gold_view.dart';
+import 'features/educationFees/models/education_fees_responses.dart';
 import 'features/educationFees/views/education_fees_amount_view.dart';
 import 'features/educationFees/views/education_fees_payment_view.dart';
 import 'features/educationFees/views/education_fees_recipient_view.dart';
@@ -317,6 +320,26 @@ final routerProvider = Provider<GoRouter>(
           builder: (context, state) => const EducationFeesPaymentView(),
         ),
         GoRoute(
+          path: RouteConstants.paymentProcessing,
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            return PaymentProcessingOverlay(
+              transactionRefId: extra['transactionRefId'] as String? ?? '',
+              paymentType: extra['paymentType'] as String? ?? 'Education Fees',
+              recipientName: extra['recipientName'] as String? ?? '',
+              maskedAccount: extra['maskedAccount'] as String? ?? '',
+              accountNo: extra['accountNo'] as String? ?? '',
+              ifsc: extra['ifsc'] as String? ?? '',
+              fallbackAmount: extra['fallbackAmount'] as String? ?? '',
+              paymentId: extra['paymentId'] as String? ?? '',
+              card: extra['card'] is EducationCard
+                  ? extra['card'] as EducationCard
+                  : null,
+              reportSuccess: extra['reportSuccess'] == true,
+            );
+          },
+        ),
+        GoRoute(
           path: RouteConstants.creditCardIntro,
           builder: (context, state) => const CreditCardIntroView(),
         ),
@@ -439,13 +462,31 @@ final routerProvider = Provider<GoRouter>(
         ),
         GoRoute(
           path: RouteConstants.transactions,
-          builder: (context, state) => const TransactionHistoryScreen(),
+          builder: (context, state) => PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (!didPop) context.go(RouteConstants.home);
+            },
+            child: const TransactionHistoryScreen(),
+          ),
         ),
         GoRoute(
           path: RouteConstants.transactionDetail,
-          builder: (context, state) => TransactionDetailScreen(
-            entry: state.extra as TransactionHistoryEntry?,
-          ),
+          builder: (context, state) {
+            final extra = state.extra;
+            if (extra is Map<String, dynamic> &&
+                extra['fromPaymentFlow'] == true) {
+              return TransactionDetailScreen(
+                entry: extra['entry'] as TransactionHistoryEntry?,
+                doneLabel: 'View Transaction History',
+                onBack: () => context.go(RouteConstants.transactions),
+                onDone: () => context.go(RouteConstants.transactions),
+              );
+            }
+            return TransactionDetailScreen(
+              entry: extra as TransactionHistoryEntry?,
+            );
+          },
         ),
         GoRoute(
           path: RouteConstants.notifications,

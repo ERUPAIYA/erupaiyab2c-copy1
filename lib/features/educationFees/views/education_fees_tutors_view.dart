@@ -1,7 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,11 +16,9 @@ import '../../../widgets/my_app_bar.dart';
 import '../../paymentgateway/razorpay_guard.dart';
 import '../../paymentgateway/razorpay_service.dart';
 import '../../profile/controllers/profile_controller.dart';
-import '../../profile/models/transaction_history_entry.dart';
 import '../components/education_payment_sheets.dart';
 import '../controllers/education_fees_controller.dart';
 import '../models/education_fees_responses.dart';
-import '../repositories/education_fees_repository.dart';
 
 class EducationFeesTutorsView extends HookConsumerWidget {
   const EducationFeesTutorsView({
@@ -46,6 +42,7 @@ class EducationFeesTutorsView extends HookConsumerWidget {
     }, const []);
     final selectedCard = useState<EducationCard?>(null);
     final expandedIndex = useState<int?>(null);
+    final processingNavigationStarted = useRef(false);
 
     useEffect(() {
       Future.microtask(() async {
@@ -70,13 +67,6 @@ class EducationFeesTutorsView extends HookConsumerWidget {
             final card = selectedCard.value;
             EducationCreateOrderResponse order;
             try {
-              print('Tutor Name: ${tutor.name}');
-              print('Masked Account: ${tutor.accountMasked}');
-              print('Unmasked Account: ${tutor.accountNoUnmasked}');
-              print('Amount: $payable');
-              print('IFSC: ${tutor.ifsc}');
-              print('========================================================');
-              
               order = await repository.createOrder(
                 recipientName: tutor.name,
                 accountNo: tutor.accountMasked,
@@ -111,51 +101,40 @@ class EducationFeesTutorsView extends HookConsumerWidget {
               orderId: order.orderId,
               keyOverride: order.key,
               onSuccess: (paymentId) {
-                // Navigate IMMEDIATELY using routerProvider as requested
+                if (processingNavigationStarted.value) return;
+                processingNavigationStarted.value = true;
                 ref.read(routerProvider).push(
-                  RouteConstants.transactionDetail,
-                  extra: _buildEducationTransactionEntry(
-                    recipientName: tutor.name,
-                    maskedAccount: tutor.accountMasked,
-                    amount: order.amount > 0 ? order.amount : payable,
-                    paymentId: paymentId,
-                    status: 'SUCCESS',
-                  ),
+                  RouteConstants.paymentProcessing,
+                  extra: {
+                    'transactionRefId': order.transactionRefId,
+                    'paymentType': 'Education Fees',
+                    'recipientName': tutor.name,
+                    'maskedAccount': tutor.accountMasked,
+                    'accountNo': tutor.accountNoUnmasked ?? tutor.accountMasked,
+                    'ifsc': tutor.ifsc,
+                    'fallbackAmount':
+                        (order.amount > 0 ? order.amount : payable)
+                            .toStringAsFixed(2),
+                    'paymentId': paymentId,
+                    'card': card,
+                    'reportSuccess': true,
+                  },
                 );
-
-                // Background verification (silent)
-                _verifyEducationPaymentStatus(
-                  repository: repository,
-                  transactionRefId: order.transactionRefId,
-                ).then((verified) {
-                  if (verified != null && verified.isSuccess) {
-                    repository.reportPaymentSuccess(
-                      recipientName: tutor.name,
-                      accountNo: tutor.accountMasked,
-                      ifsc: '',
-                      amount: order.amount > 0 ? order.amount : payable,
-                      paymentId: paymentId,
-                      status: 'success',
-                      cardToken: card?.cardToken ?? '',
-                      last4: card?.last4 ?? '',
-                      cardNetwork: card?.cardNetwork ?? '',
-                      expiryMonth: card?.expiryMonth ?? '',
-                      expiryYear: card?.expiryYear ?? '',
-                    ).catchError((_) {});
-                  }
-                });
               },
               onFailure: (message) {
-
+                if (processingNavigationStarted.value) return;
+                processingNavigationStarted.value = true;
                 ref.read(routerProvider).push(
-                  RouteConstants.transactionDetail,
-                  extra: _buildEducationTransactionEntry(
-                    recipientName: tutor.name,
-                    maskedAccount: tutor.accountMasked,
-                    amount: order.amount > 0 ? order.amount : payable,
-                    paymentId: order.transactionRefId,
-                    status: 'FAILED',
-                  ),
+                  RouteConstants.paymentProcessing,
+                  extra: {
+                    'transactionRefId': order.transactionRefId,
+                    'paymentType': 'Education Fees',
+                    'recipientName': tutor.name,
+                    'maskedAccount': tutor.accountMasked,
+                    'fallbackAmount':
+                        (order.amount > 0 ? order.amount : payable)
+                            .toStringAsFixed(2),
+                  },
                 );
               },
             );
@@ -315,29 +294,6 @@ class EducationFeesTutorsView extends HookConsumerWidget {
   }
 }
 
-Future<EducationPaymentStatusResponse?> _verifyEducationPaymentStatus({
-  required EducationFeesRepository repository,
-  required String transactionRefId,
-}) async {
-  if (transactionRefId.trim().isEmpty) return null;
-  
-  EducationPaymentStatusResponse? latest;
-  try {
-    latest = await repository.fetchPaymentStatus(transactionRefId: transactionRefId);
-    if (latest.isSuccess || latest.isFailed) return latest;
-  } catch (_) {}
-
-  const pollInterval = Duration(seconds: 2);
-  for (var attempt = 0; attempt < 5; attempt++) {
-    await Future.delayed(pollInterval);
-    try {
-      latest = await repository.fetchPaymentStatus(transactionRefId: transactionRefId);
-      if (latest.isSuccess || latest.isFailed) return latest;
-    } catch (_) {}
-  }
-  return latest;
-}
-
 class _DetailRow extends StatelessWidget {
   const _DetailRow({
     required this.label,
@@ -391,36 +347,4 @@ String _fallbackTutorName(EducationBeneficiary tutor) {
     return 'Account ${tutor.accountMasked}';
   }
   return 'Beneficiary';
-}
-
-TransactionHistoryEntry _buildEducationTransactionEntry({
-  required String recipientName,
-  required String maskedAccount,
-  required double amount,
-  required String paymentId,
-  String status = 'SUCCESS',
-}) {
-  final now = DateTime.now().toIso8601String();
-  return TransactionHistoryEntry(
-    paymentStatus: status.toUpperCase(),
-    paymentType: 'Education Fees',
-    billerName: recipientName.isEmpty ? 'Recipient' : recipientName,
-    maskedIdentifier: maskedAccount.isEmpty ? '****' : maskedAccount,
-    amount: amount.toStringAsFixed(2),
-    platformFees: '',
-    totalAmountCharged: amount.toStringAsFixed(2),
-    customerMobile: '',
-    iconUrl: '',
-    pgTransactionId: paymentId,
-    ecoinsTransactionId: '',
-    transactionId: paymentId,
-    bankReferenceId: '',
-    referenceId: paymentId,
-    transactionTime: now,
-    method: 'Card',
-    methodIcon: '',
-    paymentMode: 'Card',
-    vpa: '',
-    rrn: '',
-  );
 }
