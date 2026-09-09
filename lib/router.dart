@@ -321,21 +321,29 @@ final routerProvider = Provider<GoRouter>(
         ),
         GoRoute(
           path: RouteConstants.paymentProcessing,
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
-            return PaymentProcessingOverlay(
-              transactionRefId: extra['transactionRefId'] as String? ?? '',
-              paymentType: extra['paymentType'] as String? ?? 'Education Fees',
-              recipientName: extra['recipientName'] as String? ?? '',
-              maskedAccount: extra['maskedAccount'] as String? ?? '',
-              accountNo: extra['accountNo'] as String? ?? '',
-              ifsc: extra['ifsc'] as String? ?? '',
-              fallbackAmount: extra['fallbackAmount'] as String? ?? '',
-              paymentId: extra['paymentId'] as String? ?? '',
-              card: extra['card'] is EducationCard
-                  ? extra['card'] as EducationCard
-                  : null,
-              reportSuccess: extra['reportSuccess'] == true,
+            return CustomTransitionPage<void>(
+              key: state.pageKey,
+              opaque: false,
+              barrierDismissible: false,
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) => child,
+              child: PaymentProcessingOverlay(
+                transactionRefId: extra['transactionRefId'] as String? ?? '',
+                paymentType:
+                    extra['paymentType'] as String? ?? 'Education Fees',
+                recipientName: extra['recipientName'] as String? ?? '',
+                maskedAccount: extra['maskedAccount'] as String? ?? '',
+                accountNo: extra['accountNo'] as String? ?? '',
+                ifsc: extra['ifsc'] as String? ?? '',
+                fallbackAmount: extra['fallbackAmount'] as String? ?? '',
+                paymentId: extra['paymentId'] as String? ?? '',
+                card: extra['card'] is EducationCard
+                    ? extra['card'] as EducationCard
+                    : null,
+                reportSuccess: extra['reportSuccess'] == true,
+              ),
             );
           },
         ),

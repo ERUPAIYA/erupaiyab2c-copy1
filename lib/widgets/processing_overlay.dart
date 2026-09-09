@@ -14,6 +14,9 @@ import 'package:e_rupaiya/services/logger_service.dart';
 
 import '../constants/routes_constant.dart';
 
+const _statusPollInterval = Duration(seconds: 2);
+const _pendingResolutionWindow = Duration(seconds: 6);
+
 /// A reusable processing overlay that can be displayed over any child widget.
 ///
 /// [isProcessing] controls whether the overlay is shown.
@@ -41,7 +44,7 @@ class ProcessingOverlay extends StatelessWidget {
             child: AbsorbPointer(
               absorbing: true,
               child: Container(
-                color: Colors.black.withValues(alpha: 0.45),
+                color: Colors.black.withValues(alpha: 0.24),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -123,6 +126,7 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
 
         final repository = ref.read(educationFeesRepositoryProvider);
         var consecutiveErrors = 0;
+        final processingStartedAt = DateTime.now();
 
         while (!cancelled && context.mounted) {
           try {
@@ -138,8 +142,25 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
             consecutiveErrors = 0;
             if (result.isProcessing) {
               processingMessage.value = message;
-              await Future<void>.delayed(const Duration(seconds: 2));
+              await Future<void>.delayed(_statusPollInterval);
               continue;
+            }
+
+            if (result.isPending) {
+              final elapsed = DateTime.now().difference(processingStartedAt);
+              if (elapsed < _pendingResolutionWindow) {
+                final remaining = _pendingResolutionWindow - elapsed;
+                await Future<void>.delayed(
+                  remaining < _statusPollInterval
+                      ? remaining
+                      : _statusPollInterval,
+                );
+                continue;
+              }
+            }
+
+            if (cancelled || !context.mounted) {
+              return;
             }
 
             if (result.isSuccess && reportSuccess) {
@@ -193,7 +214,7 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
             }
             processingMessage.value =
                 'Confirming your payment status. Please wait...';
-            await Future<void>.delayed(const Duration(seconds: 2));
+            await Future<void>.delayed(_statusPollInterval);
           }
         }
       }
@@ -209,23 +230,26 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
           context.go(RouteConstants.transactions);
         }
       },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: isProcessing.value
+      child: Material(
+        type: MaterialType.transparency,
+        child: isProcessing.value
             ? ProcessingOverlay(
                 isProcessing: true,
                 message: processingMessage.value,
                 child: const SizedBox.expand(),
               )
-            : _PaymentStatusError(
-                message: errorMessage.value ?? 'Unable to verify payment.',
-                onRetry: () {
-                  isProcessing.value = true;
-                  errorMessage.value = null;
-                  processingMessage.value = message;
-                  retryToken.value++;
-                },
-                onViewHistory: () => context.go(RouteConstants.transactions),
+            : ColoredBox(
+                color: Colors.white,
+                child: _PaymentStatusError(
+                  message: errorMessage.value ?? 'Unable to verify payment.',
+                  onRetry: () {
+                    isProcessing.value = true;
+                    errorMessage.value = null;
+                    processingMessage.value = message;
+                    retryToken.value++;
+                  },
+                  onViewHistory: () => context.go(RouteConstants.transactions),
+                ),
               ),
       ),
     );

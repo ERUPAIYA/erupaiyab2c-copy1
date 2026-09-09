@@ -255,6 +255,7 @@ class EducationPaymentStatusResponse {
             .toString()
             .trim();
 
+    print('DEBUG: API Response Payment Status -> $paymentStatus');
     print('Beneficiary JSON Response: $json');
 
     final rawAmount = (flattened['amount'] ??
