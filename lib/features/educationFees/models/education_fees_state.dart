@@ -17,6 +17,7 @@ class EducationFeesState {
     this.panErrorMessage,
     this.accountType = EducationAccountType.none,
     this.accountNumber = '',
+    this.accountNoUnmasked,
     this.ifsc = '',
     this.isVerifyingBank = false,
     this.bankVerified = false,
@@ -43,6 +44,7 @@ class EducationFeesState {
   final String? panErrorMessage;
   final EducationAccountType accountType;
   final String accountNumber;
+  final String? accountNoUnmasked;
   final String ifsc;
   final bool isVerifyingBank;
   final bool bankVerified;
@@ -69,6 +71,7 @@ class EducationFeesState {
     Object? panErrorMessage = _sentinel,
     EducationAccountType? accountType,
     String? accountNumber,
+    Object? accountNoUnmasked = _sentinel,
     String? ifsc,
     bool? isVerifyingBank,
     bool? bankVerified,
@@ -99,6 +102,9 @@ class EducationFeesState {
           : panErrorMessage as String?,
       accountType: accountType ?? this.accountType,
       accountNumber: accountNumber ?? this.accountNumber,
+      accountNoUnmasked: accountNoUnmasked == _sentinel
+          ? this.accountNoUnmasked
+          : accountNoUnmasked as String?,
       ifsc: ifsc ?? this.ifsc,
       isVerifyingBank: isVerifyingBank ?? this.isVerifyingBank,
       bankVerified: bankVerified ?? this.bankVerified,

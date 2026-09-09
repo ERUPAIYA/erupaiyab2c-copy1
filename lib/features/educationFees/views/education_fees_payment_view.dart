@@ -63,6 +63,7 @@ class EducationFeesPaymentView extends HookConsumerWidget {
               order = await repository.createOrder(
                 recipientName: state.recipientName,
                 accountNo: state.accountNumber,
+                accountNoUnmasked: state.accountNumber,
                 ifsc: state.ifsc,
                 amount: payable,
               );

@@ -177,8 +177,7 @@ class EducationCreateOrderRequest {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> map = {
       'recipient_name': recipientName,
-      'account_no': accountNo,
-      if (accountNoUnmasked != null) 'accountNoUnmasked': accountNoUnmasked,
+      'account_no': accountNoUnmasked ?? accountNo,
       'ifsc': ifsc,
       'amount': double.parse(amount.toStringAsFixed(2)),
     };
