@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:e_rupaiya/features/educationFees/controllers/education_fees_controller.dart';
@@ -14,13 +15,13 @@ import 'package:e_rupaiya/services/logger_service.dart';
 
 import '../constants/routes_constant.dart';
 
-const _statusPollInterval = Duration(seconds: 2);
-const _pendingResolutionWindow = Duration(seconds: 6);
+const _statusRetryInterval = Duration(seconds: 1);
+const _maxStatusAttempts = 3;
 
 /// A reusable processing overlay that can be displayed over any child widget.
 ///
 /// [isProcessing] controls whether the overlay is shown.
-/// [message] is the text displayed below the spinner.
+/// [message] is the processing title displayed in the bottom panel.
 /// [child] is the underlying UI over which the overlay appears.
 class ProcessingOverlay extends StatelessWidget {
   const ProcessingOverlay({
@@ -43,25 +44,65 @@ class ProcessingOverlay extends StatelessWidget {
           Positioned.fill(
             child: AbsorbPointer(
               absorbing: true,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.24),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.48),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    width: double.infinity,
+                    height: 411.h,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20.r),
                       ),
-                      SizedBox(height: 12.h),
-                      Text(
-                        message,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(40.w, 72.h, 40.w, 24.h),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/images/png/Vector.png',
+                              width: 51.w,
+                              height: 50.h,
+                              fit: BoxFit.contain,
                             ),
+                            SizedBox(height: 28.h),
+                            SizedBox(
+                              width: 287.w,
+                              child: Text(
+                                message,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.black,
+                                  fontSize: 22.sp,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20.h),
+                            SizedBox(
+                              width: 335.w,
+                              child: Text(
+                                'Your payment is being processed. Please wait a moment and keep this screen open. Do not close the app or press the back button.',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: const Color(0xFF7C7C7C),
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w400,
+                                  height: 24 / 14,
+                                  letterSpacing: -0.28.sp,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -90,7 +131,7 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
     this.paymentId = '',
     this.card,
     this.reportSuccess = false,
-    this.message = 'Payment is being processed...',
+    this.message = 'Processing Your Payment...',
   });
 
   final String transactionRefId;
@@ -107,28 +148,61 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isProcessing = useState(true);
-    final processingMessage = useState(message);
-    final errorMessage = useState<String?>(null);
-    final retryToken = useState(0);
-
     useEffect(() {
       var cancelled = false;
 
       Future<void> verify() async {
         final referenceId = transactionRefId.trim();
         if (referenceId.isEmpty) {
-          isProcessing.value = false;
-          errorMessage.value =
-              'The payment reference is missing. Please check transaction history.';
+          logger.error('Payment reference is missing');
+          if (context.mounted) {
+            context.go(RouteConstants.transactions);
+          }
           return;
         }
 
         final repository = ref.read(educationFeesRepositoryProvider);
-        var consecutiveErrors = 0;
-        final processingStartedAt = DateTime.now();
 
-        while (!cancelled && context.mounted) {
+        void showResult(EducationPaymentStatusResponse result) {
+          if (result.isSuccess && reportSuccess) {
+            unawaited(
+              _reportSuccessfulPayment(
+                repository: repository,
+                result: result,
+                recipientName: recipientName,
+                accountNo: accountNo,
+                ifsc: ifsc,
+                fallbackAmount: fallbackAmount,
+                paymentId: paymentId,
+                card: card,
+              ),
+            );
+          }
+
+          final entry = _buildTransactionEntry(
+            result: result,
+            transactionRefId: referenceId,
+            paymentType: paymentType,
+            recipientName: recipientName,
+            maskedAccount: maskedAccount,
+            fallbackAmount: fallbackAmount,
+            paymentId: paymentId,
+          );
+          logger.info(
+            'Payment ${result.paymentStatus.toUpperCase()} for $referenceId',
+          );
+          context.go(
+            RouteConstants.transactionDetail,
+            extra: <String, dynamic>{
+              'entry': entry,
+              'fromPaymentFlow': true,
+            },
+          );
+        }
+
+        for (var attempt = 1;
+            attempt <= _maxStatusAttempts && !cancelled && context.mounted;
+            attempt++) {
           try {
             final result = await repository.fetchPaymentStatus(
               transactionRefId: referenceId,
@@ -139,166 +213,42 @@ class PaymentProcessingOverlay extends HookConsumerWidget {
               throw const FormatException('Unknown payment status');
             }
 
-            consecutiveErrors = 0;
-            if (result.isProcessing) {
-              processingMessage.value = message;
-              await Future<void>.delayed(_statusPollInterval);
-              continue;
-            }
-
-            if (result.isPending) {
-              final elapsed = DateTime.now().difference(processingStartedAt);
-              if (elapsed < _pendingResolutionWindow) {
-                final remaining = _pendingResolutionWindow - elapsed;
-                await Future<void>.delayed(
-                  remaining < _statusPollInterval
-                      ? remaining
-                      : _statusPollInterval,
-                );
-                continue;
-              }
-            }
-
-            if (cancelled || !context.mounted) {
+            final shouldShowImmediately = result.isSuccess || result.isPending;
+            if (shouldShowImmediately || attempt == _maxStatusAttempts) {
+              showResult(result);
               return;
             }
-
-            if (result.isSuccess && reportSuccess) {
-              unawaited(
-                _reportSuccessfulPayment(
-                  repository: repository,
-                  result: result,
-                  recipientName: recipientName,
-                  accountNo: accountNo,
-                  ifsc: ifsc,
-                  fallbackAmount: fallbackAmount,
-                  paymentId: paymentId,
-                  card: card,
-                ),
-              );
-            }
-
-            final entry = _buildTransactionEntry(
-              result: result,
-              transactionRefId: referenceId,
-              paymentType: paymentType,
-              recipientName: recipientName,
-              maskedAccount: maskedAccount,
-              fallbackAmount: fallbackAmount,
-              paymentId: paymentId,
-            );
-            logger.info(
-              'Payment ${result.paymentStatus.toUpperCase()} for $referenceId',
-            );
-            context.go(
-              RouteConstants.transactionDetail,
-              extra: <String, dynamic>{
-                'entry': entry,
-                'fromPaymentFlow': true,
-              },
-            );
-            return;
           } catch (error, stackTrace) {
             if (cancelled || !context.mounted) return;
-            consecutiveErrors++;
             logger.error(
-              'Payment verification attempt failed: $error',
+              'Payment verification attempt $attempt failed: $error',
               error: error,
               stackTrace: stackTrace,
             );
-            if (consecutiveErrors >= 5) {
-              isProcessing.value = false;
-              errorMessage.value =
-                  'We could not confirm the payment status. Please try again or check transaction history.';
-              return;
-            }
-            processingMessage.value =
-                'Confirming your payment status. Please wait...';
-            await Future<void>.delayed(_statusPollInterval);
           }
+
+          if (attempt < _maxStatusAttempts) {
+            await Future<void>.delayed(_statusRetryInterval);
+          }
+        }
+
+        if (!cancelled && context.mounted) {
+          context.go(RouteConstants.transactions);
         }
       }
 
       unawaited(Future<void>.microtask(verify));
       return () => cancelled = true;
-    }, [retryToken.value]);
+    }, const []);
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && !isProcessing.value) {
-          context.go(RouteConstants.transactions);
-        }
-      },
       child: Material(
         type: MaterialType.transparency,
-        child: isProcessing.value
-            ? ProcessingOverlay(
-                isProcessing: true,
-                message: processingMessage.value,
-                child: const SizedBox.expand(),
-              )
-            : ColoredBox(
-                color: Colors.white,
-                child: _PaymentStatusError(
-                  message: errorMessage.value ?? 'Unable to verify payment.',
-                  onRetry: () {
-                    isProcessing.value = true;
-                    errorMessage.value = null;
-                    processingMessage.value = message;
-                    retryToken.value++;
-                  },
-                  onViewHistory: () => context.go(RouteConstants.transactions),
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-class _PaymentStatusError extends StatelessWidget {
-  const _PaymentStatusError({
-    required this.message,
-    required this.onRetry,
-    required this.onViewHistory,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-  final VoidCallback onViewHistory;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 28.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline, color: Colors.orange, size: 52.r),
-              SizedBox(height: 18.h),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              SizedBox(height: 24.h),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: onRetry,
-                  child: const Text('Retry status check'),
-                ),
-              ),
-              TextButton(
-                onPressed: onViewHistory,
-                child: const Text('View transaction history'),
-              ),
-            ],
-          ),
+        child: ProcessingOverlay(
+          isProcessing: true,
+          message: message,
+          child: const SizedBox.expand(),
         ),
       ),
     );
