@@ -15,7 +15,7 @@ class HomeIconTile extends StatefulWidget {
     super.key,
     required this.label,
     this.onTap,
-    this.iconSize = 28,
+    this.iconSize = 32,
     this.iconUrl,
     this.offer,
     this.labelSpacing,
@@ -77,7 +77,7 @@ class _HomeIconTileState extends State<HomeIconTile>
     final labelWords = widget.label.trim().split(RegExp(r'\s+'));
     final isTwoWordLabel = labelWords.length == 2;
 
-    final ringSize = 62.r;
+    final ringSize = 72.r;
     final iconSize = widget.iconSize.r;
 
     return RepaintBoundary(
@@ -112,8 +112,8 @@ class _HomeIconTileState extends State<HomeIconTile>
                     ),
                   ),
                 Container(
-                  height: 54.r,
-                  width: 54.r,
+                  height: 64.r,
+                  width: 64.r,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
@@ -131,8 +131,8 @@ class _HomeIconTileState extends State<HomeIconTile>
                       child: widget.isLoading
                           ? SizedBox(
                               key: const ValueKey('loading'),
-                              height: 24.r,
-                              width: 24.r,
+                              height: 26.r,
+                              width: 26.r,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.4,
                                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -172,9 +172,9 @@ class _HomeIconTileState extends State<HomeIconTile>
                       ),
                       child: Text(
                         '₹${widget.offer}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

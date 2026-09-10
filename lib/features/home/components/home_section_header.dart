@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HomeSectionHeader extends StatelessWidget {
   const HomeSectionHeader({
@@ -26,6 +27,7 @@ class HomeSectionHeader extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
+                  fontSize: 16.sp,
                 ),
           ),
           if (actionLabel != null) ...[
@@ -36,6 +38,7 @@ class HomeSectionHeader extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.black,
                       fontWeight: FontWeight.w600,
+                      fontSize: 12.sp,
                     ),
               ),
             ),

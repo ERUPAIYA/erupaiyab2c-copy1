@@ -79,124 +79,86 @@ class HomeView extends HookConsumerWidget {
       const TransactionHistoryScreen(),
     ];
 
-    final navTextStyle = TextStyle(
-      fontSize: 11.sp,
-      fontWeight: FontWeight.w600,
-      color: Colors.black,
-      height: 0.4,
-    );
-    final inactiveNavColor = AppColors.textPrimary.withOpacity(0.45);
-    final navIconBoxSize = 22.r;
     final navItems = [
       PersistentBottomNavBarItem(
         contentPadding: 0,
-        icon: _BottomIcon(
+        icon: _HomeNavTabItem(
           asset: FileConstants.paybillActive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'Pay Bills',
+          isActive: true,
         ),
-        inactiveIcon: _BottomIcon(
+        inactiveIcon: _HomeNavTabItem(
           asset: FileConstants.paybillInactive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'Pay Bills',
+          isActive: false,
         ),
-        title: 'Pay Bills',
-        iconSize: navIconBoxSize,
-        textStyle: navTextStyle,
-        activeColorPrimary: Colors.black,
-        inactiveColorPrimary: inactiveNavColor,
+        title: null,
+        activeColorPrimary: const Color(0xFF000000),
+        inactiveColorPrimary: const Color(0xFF6D6D6D),
       ),
       PersistentBottomNavBarItem(
         contentPadding: 0,
-        icon: _BottomIcon(
+        icon: _HomeNavTabItem(
           asset: FileConstants.offersActive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'Offers',
+          isActive: true,
         ),
-        inactiveIcon: _BottomIcon(
+        inactiveIcon: _HomeNavTabItem(
           asset: FileConstants.offersInactive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'Offers',
+          isActive: false,
         ),
-        title: 'Offers',
-        iconSize: navIconBoxSize,
-        textStyle: navTextStyle,
-        activeColorPrimary: Colors.black,
-        inactiveColorPrimary: inactiveNavColor,
+        title: null,
+        activeColorPrimary: const Color(0xFF000000),
+        inactiveColorPrimary: const Color(0xFF6D6D6D),
       ),
       PersistentBottomNavBarItem(
         contentPadding: 0,
-        icon: _BottomIcon(
-          asset: FileConstants.homeSpin,
-          color: AppColors.primary,
-          size: 22.r,
-          yOffset: 0,
+        icon: _GradientFabIcon(
+          asset: FileConstants.spinBottom,
+          iconColor: Colors.white,
         ),
-        inactiveIcon: _BottomIcon(
-          asset: FileConstants.homeSpin,
-          color: AppColors.primary,
-          size: 22.r,
-          yOffset: 0,
+        inactiveIcon: _GradientFabIcon(
+          asset: FileConstants.spinBottom,
+          iconColor: Colors.white,
         ),
-        title: 'Spin & Win',
-        iconSize: navIconBoxSize,
-        textStyle: navTextStyle,
-        activeColorPrimary: Colors.black,
-        inactiveColorPrimary: inactiveNavColor,
+        title: null,
+        activeColorPrimary: AppColors.primary,
+        inactiveColorPrimary: AppColors.primary,
       ),
-      // PersistentBottomNavBarItem(
-      //   contentPadding: 0,
-      //   icon: _BottomIcon(
-      //     asset: FileConstants.homeSpin,
-      //     size: 22.r,
-      //     yOffset: 0,
-      //   ),
-      //   inactiveIcon: _BottomIcon(
-      //     asset: FileConstants.homeSpin,
-      //     size: 22.r,
-      //     yOffset: 0,
-      //   ),
-      //   title: 'Spin & Win',
-      //   iconSize: navIconBoxSize,
-      //   textStyle: navTextStyle,
-      //   activeColorPrimary: Colors.black,
-      //   inactiveColorPrimary: inactiveNavColor,
-      // ),
       PersistentBottomNavBarItem(
         contentPadding: 0,
-        icon: _BottomIconWithBadge(
+        icon: _HomeNavTabItem(
           asset: FileConstants.alertsActive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'Alerts',
+          isActive: true,
+          showBadge: true,
         ),
-        inactiveIcon: _BottomIconWithBadge(
+        inactiveIcon: _HomeNavTabItem(
           asset: FileConstants.alertsInactive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'Alerts',
+          isActive: false,
+          showBadge: true,
         ),
-        title: 'Alerts',
-        iconSize: navIconBoxSize,
-        textStyle: navTextStyle,
-        activeColorPrimary: Colors.black,
-        inactiveColorPrimary: inactiveNavColor,
+        title: null,
+        activeColorPrimary: const Color(0xFF000000),
+        inactiveColorPrimary: const Color(0xFF6D6D6D),
       ),
       PersistentBottomNavBarItem(
         contentPadding: 0,
-        icon: _BottomIcon(
+        icon: _HomeNavTabItem(
           asset: FileConstants.historyActive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'History',
+          isActive: true,
         ),
-        inactiveIcon: _BottomIcon(
+        inactiveIcon: _HomeNavTabItem(
           asset: FileConstants.historyInactive,
-          size: 22.r,
-          yOffset: 0,
+          label: 'History',
+          isActive: false,
         ),
-        title: 'History',
-        iconSize: navIconBoxSize,
-        textStyle: navTextStyle,
-        activeColorPrimary: Colors.black,
-        inactiveColorPrimary: inactiveNavColor,
+        title: null,
+        activeColorPrimary: const Color(0xFF000000),
+        inactiveColorPrimary: const Color(0xFF6D6D6D),
       ),
     ];
 
@@ -207,13 +169,14 @@ class HomeView extends HookConsumerWidget {
           FileConstants.paybillInactive,
           FileConstants.offersActive,
           FileConstants.offersInactive,
-          FileConstants.homeSpin,
+          FileConstants.spinBottom,
           FileConstants.alertsActive,
           FileConstants.alertsInactive,
           FileConstants.historyActive,
           FileConstants.historyInactive,
           FileConstants.referandearn,
-          FileConstants.coin_3d,
+          FileConstants.coinOuter,
+          FileConstants.coinInner,
           FileConstants.bharatConnectColor,
         ];
         for (final asset in assets) {
@@ -259,6 +222,18 @@ class HomeView extends HookConsumerWidget {
       return null;
     }, const []);
 
+    useEffect(() {
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFFF835C),
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemStatusBarContrastEnforced: false,
+        ),
+      );
+      return null;
+    }, const []);
+
     Future<void> showExitDialog() async {
       if (isExitDialogOpen.value) return;
       isExitDialogOpen.value = true;
@@ -284,7 +259,14 @@ class HomeView extends HookConsumerWidget {
         }
         showExitDialog();
       },
-      child: PersistentTabView(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFFF835C),
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemStatusBarContrastEnforced: false,
+        ),
+        child: PersistentTabView(
         context,
         controller: tabController,
         screens: tabs,
@@ -292,11 +274,37 @@ class HomeView extends HookConsumerWidget {
         navBarStyle: NavBarStyle.simple,
         decoration: NavBarDecoration(
           borderRadius: BorderRadius.circular(0),
-          // color: Colors.white,
           colorBehindNavBar: Colors.white,
+          boxShadow: const [
+            BoxShadow(
+              offset: Offset(0, -7),
+              blurRadius: 14,
+              color: Color(0x1ABFBFBF),
+            ),
+            BoxShadow(
+              offset: Offset(0, -26),
+              blurRadius: 26,
+              color: Color(0x17BFBFBF),
+            ),
+            BoxShadow(
+              offset: Offset(0, -59),
+              blurRadius: 35,
+              color: Color(0x0DBFBFBF),
+            ),
+            BoxShadow(
+              offset: Offset(0, -104),
+              blurRadius: 42,
+              color: Color(0x03BFBFBF),
+            ),
+            BoxShadow(
+              offset: Offset(0, -163),
+              blurRadius: 46,
+              color: Color(0x00BFBFBF),
+            ),
+          ],
         ),
-        navBarHeight: 65,
-        padding: const EdgeInsets.only(top: 6, bottom: 10),
+        navBarHeight: 70.h,
+        padding: EdgeInsets.only(top: 6.h, bottom: 8.h),
         backgroundColor: Colors.white,
         hideNavigationBarWhenKeyboardAppears: true,
         confineToSafeArea: true,
@@ -314,6 +322,7 @@ class HomeView extends HookConsumerWidget {
             return;
           }
         },
+      ),
       ),
     );
 

@@ -32,6 +32,7 @@ class FileConstants {
   static String creditCardGif = 'assets/gif/creditcard.gif';
   static String splashGif = 'assets/gif/splash_gif.gif';
   static String splashLottie = 'assets/lottie/logo-verticle.json';
+  static String processingLottie = 'assets/lottie/processing_payment.json';
   static String giftGif = 'assets/gif/gift.gif';
   static String goodGif = 'assets/gif/good.gif';
   static String notGoodGif = 'assets/gif/notGood.gif';
@@ -151,12 +152,12 @@ class FileConstants {
   static String giftIcon = 'assets/images/png/home_icon/giftIcon.png';
   static String spinIcon = 'assets/images/png/home_icon/spinIcon.png';
   static String faqIcon = 'assets/images/png/home_icon/faq.png';
-  static String digitalSilverGif = 'assets/gif/silver.gif';
+  static String digitalSilverGif = 'assets/images/png/silver.gif';
   static String goldSip = 'assets/images/png/digital_gold_silver/goldSip.png';
   static String sipBg = 'assets/images/png/digital_gold_silver/sigBg.png';
   static String coinsDeck =
       'assets/images/png/digital_gold_silver/coinDeck.png';
-  static String digitalGoldGif = 'assets/gif/gold.gif';
+  static String digitalGoldGif = 'assets/images/png/gold.gif';
   static String spinRewardGif = 'assets/gif/spinrewardGif.gif';
   static String spincoin = 'assets/images/png/home_icon/spincoin.png';
   static String digitalsGold = 'assets/images/png/home_icon/digital_gold.png';
@@ -186,6 +187,11 @@ class FileConstants {
   static String arrow = 'assets/images/png/arrow.png';
   static String referAndEarn = 'assets/images/png/referearn.png';
   static String coin_3d = 'assets/images/png/3dcoin.png';
+  static String coinOuter = 'assets/images/png/coinouter.png';
+  static String coinInner = 'assets/images/png/coininner.png';
+  static String ecoinsBadge = 'assets/images/png/ecoins.png';
+  static String favicon = 'assets/images/png/favicon.png';
+  static String spinBottom = 'assets/images/png/spinbottom.png';
   static String myTeam = 'assets/images/png/my_team.png';
   static String recentReferrals = 'assets/images/png/recent_referrals.png';
   static String referralsWorks = 'assets/images/png/referrals_works.png';

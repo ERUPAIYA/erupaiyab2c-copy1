@@ -3,17 +3,27 @@
 part of 'home_view.dart';
 
 class _Dot extends StatelessWidget {
-  const _Dot({required this.active});
+  const _Dot({
+    required this.active,
+    this.onBanner = false,
+  });
   final bool active;
+  final bool onBanner;
 
   @override
   Widget build(BuildContext context) {
+    final Color color;
+    if (onBanner) {
+      color = active ? Colors.white : Colors.white.withOpacity(0.45);
+    } else {
+      color = active ? AppColors.primary : AppColors.lightBorder;
+    }
     return Container(
-      width: active ? 14 : 8,
-      height: 8,
+      width: (active ? 14 : (onBanner ? 6 : 8)).w,
+      height: (onBanner ? 6 : 8).h,
       decoration: BoxDecoration(
-        color: active ? AppColors.primary : AppColors.lightBorder,
-        borderRadius: BorderRadius.circular(10),
+        color: color,
+        borderRadius: BorderRadius.circular(40.r),
       ),
     );
   }
@@ -25,8 +35,9 @@ class _HeaderIconButton extends StatelessWidget {
     this.icon,
     this.iconAsset,
     this.badgeCount,
-    this.size = 36,
-    this.iconSize = 18,
+    this.size = 40,
+    this.iconSize = 20,
+    this.iconColor,
   }) : assert(icon != null || iconAsset != null);
 
   final VoidCallback onTap;
@@ -35,20 +46,23 @@ class _HeaderIconButton extends StatelessWidget {
   final int? badgeCount;
   final double size;
   final double iconSize;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
     final resolvedSize = size.r;
     final resolvedIconSize = iconSize.r;
+    final resolvedIconColor = iconColor ?? AppColors.textPrimary;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(resolvedSize / 2),
+      borderRadius: BorderRadius.circular(30.r),
       child: Container(
         height: resolvedSize,
         width: resolvedSize,
-        decoration: const BoxDecoration(
+        padding: EdgeInsets.fromLTRB(6.w, 2.h, 6.w, 2.h),
+        decoration: BoxDecoration(
           color: Colors.white,
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(30.r),
         ),
         child: Stack(
           clipBehavior: Clip.none,
@@ -59,12 +73,12 @@ class _HeaderIconButton extends StatelessWidget {
                       iconAsset!,
                       height: resolvedIconSize,
                       width: resolvedIconSize,
-                      color: AppColors.textPrimary,
+                      color: resolvedIconColor,
                     )
                   : Icon(
                       icon,
                       size: resolvedIconSize,
-                      color: AppColors.textPrimary,
+                      color: resolvedIconColor,
                     ),
             ),
             if ((badgeCount ?? 0) > 0)
@@ -85,9 +99,9 @@ class _HeaderIconButton extends StatelessWidget {
                   child: Text(
                     (badgeCount ?? 0) > 9 ? '9+' : '${badgeCount ?? 0}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
+                      fontSize: 9.sp,
                       fontWeight: FontWeight.w700,
                       height: 1.1,
                       decoration: TextDecoration.none,
@@ -123,7 +137,7 @@ class _PagerDots extends StatelessWidget {
 class _BottomIcon extends StatelessWidget {
   const _BottomIcon({
     required this.asset,
-    this.size = 26,
+    this.size = 24,
     this.color,
     this.yOffset = 0,
   });
@@ -159,7 +173,7 @@ class _BottomIcon extends StatelessWidget {
 class _BottomIconWithBadge extends StatelessWidget {
   const _BottomIconWithBadge({
     required this.asset,
-    this.size = 20,
+    this.size = 24,
     this.color,
     this.yOffset = 0,
   });
@@ -221,9 +235,9 @@ class _BottomIconWithBadge extends StatelessWidget {
                     child: Text(
                       unreadCount > 9 ? '9+' : '$unreadCount',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 8,
+                        fontSize: 8.sp,
                         fontWeight: FontWeight.w700,
                         height: 1,
                         decoration: TextDecoration.none,
@@ -252,8 +266,8 @@ class _GradientFabIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 65.h,
-      width: 55.w,
+      height: 48.r,
+      width: 48.r,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
@@ -265,11 +279,83 @@ class _GradientFabIcon extends StatelessWidget {
       child: Center(
         child: Image.asset(
           asset,
-          height: 35.h,
-          width: 20.w,
+          height: 26.h,
+          width: 24.w,
           color: iconColor ?? Colors.white,
+          fit: BoxFit.contain,
         ),
       ),
+    );
+  }
+}
+
+class _HomeNavTabItem extends StatelessWidget {
+  const _HomeNavTabItem({
+    required this.asset,
+    required this.label,
+    required this.isActive,
+    this.showBadge = false,
+  });
+
+  final String asset;
+  final String label;
+  final bool isActive;
+  final bool showBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive ? const Color(0xFF000000) : const Color(0xFF6D6D6D);
+    final icon = Image.asset(
+      asset,
+      height: 24.r,
+      width: 24.r,
+      fit: BoxFit.contain,
+    );
+    return SizedBox(
+      width: 61.w,
+      height: 45.h,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (showBadge)
+            _BottomIconWithBadge(
+              asset: asset,
+              size: 24.r,
+            )
+          else
+            icon,
+          SizedBox(height: 4.h),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.bricolageGrotesque(
+              color: color,
+              fontSize: 14.sp,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+              height: 1,
+              letterSpacing: -0.28,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EcoinsGlyph extends StatelessWidget {
+  const _EcoinsGlyph({this.size = 24});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      FileConstants.favicon,
+      width: size.w,
+      height: size.h,
+      fit: BoxFit.contain,
     );
   }
 }
@@ -306,7 +392,14 @@ class _HomeTopBar extends StatelessWidget {
         : resolvedWalletBalance == resolvedWalletBalance.roundToDouble()
             ? resolvedWalletBalance.toStringAsFixed(0)
             : resolvedWalletBalance.toStringAsFixed(2);
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(height: 8.h),
+        SizedBox(
+      width: 392.w,
+      height: 40.h,
+      child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
@@ -315,14 +408,15 @@ class _HomeTopBar extends StatelessWidget {
               onTap: onProfileTap,
               child: _ProfileAvatar(
                 initials: initials,
-                size: compact ? 32 : 36,
+                size: 40,
               ),
             ),
             SizedBox(width: 8.w),
             _HeaderIconButton(
               icon: Icons.search,
-              size: compact ? 32 : 36,
-              iconSize: compact ? 16 : 18,
+              size: 40,
+              iconSize: 16,
+              iconColor: const Color(0xFFDD5428),
               onTap: onSearchTap,
             ),
           ],
@@ -331,49 +425,77 @@ class _HomeTopBar extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: onReferTap,
-              child: Image.asset(
-                FileConstants.referandearn,
-                height: compact ? 26.h : 30.h,
-                width: compact ? 120.w : 132.w,
-                fit: BoxFit.contain,
+              child: Container(
+                width: 128.w,
+                height: 36.h,
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                decoration: BoxDecoration(
+                  color: const Color(0x66000000),
+                  borderRadius: BorderRadius.circular(27.r),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      FileConstants.giftIcon,
+                      height: 16.r,
+                      width: 16.r,
+                      fit: BoxFit.contain,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'Refer & Earn',
+                      style: textStyle.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12.sp,
+                        height: 1.1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
+            SizedBox(width: 6.w),
             GestureDetector(
               onTap: () {
                 context.push(RouteConstants.referAndEarnWallet);
               },
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                width: 76.w,
+                height: 36.h,
+                padding: EdgeInsets.fromLTRB(8.w, 6.h, 8.w, 6.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+                  borderRadius: BorderRadius.circular(50.r),
                 ),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      FileConstants.coin_3d,
-                      width: compact ? 14.w : 16.w,
-                      height: compact ? 14.w : 16.w,
-                    ),
+                    const _EcoinsGlyph(size: 24),
                     SizedBox(width: 6.w),
                     if (isWalletLoading)
                       SizedBox(
-                        width: compact ? 12.w : 14.w,
-                        height: compact ? 12.w : 14.w,
+                        width: 12.w,
+                        height: 12.w,
                         child: const CircularProgressIndicator(
                           strokeWidth: 1.8,
                           color: AppColors.textPrimary,
                         ),
                       )
                     else
-                      Text(
-                        displayBalance,
-                        style: textStyle.copyWith(
-                          color: hasWalletError
-                              ? AppColors.textPrimary.withOpacity(0.55)
-                              : AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: compact ? 10.sp : 11.sp,
+                      Flexible(
+                        child: Text(
+                          displayBalance,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.bricolageGrotesque(
+                            color: hasWalletError
+                                ? AppColors.textPrimary.withOpacity(0.55)
+                                : AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.sp,
+                            height: 1,
+                          ),
                         ),
                       ),
                   ],
@@ -382,6 +504,10 @@ class _HomeTopBar extends StatelessWidget {
             ),
           ],
         ),
+      ],
+    ),
+        ),
+        SizedBox(height: 18.h),
       ],
     );
   }
@@ -397,9 +523,9 @@ class _ProfileAvatar extends StatelessWidget {
     return Container(
       height: size.r,
       width: size.r,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.white,
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(24.r),
       ),
       child: Center(
         child: Text(
@@ -408,6 +534,7 @@ class _ProfileAvatar extends StatelessWidget {
             textStyle: Theme.of(context).textTheme.bodySmall,
             color: AppColors.primary,
             fontWeight: FontWeight.w700,
+            fontSize: 13.sp,
             height: 1,
           ),
         ),
@@ -461,7 +588,7 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 14.sp,
+            fontSize: 16.sp,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
@@ -478,19 +605,20 @@ class _SectionHeader extends StatelessWidget {
                     textStyle: Theme.of(context).textTheme.bodyMedium,
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
+                    fontSize: 12.sp,
                   ),
                 ),
                 SizedBox(width: 6.w),
                 Container(
-                  height: 20.r,
-                  width: 20.r,
+                  height: 22.r,
+                  width: 22.r,
                   decoration: const BoxDecoration(
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.arrow_forward,
-                    size: 14.r,
+                    size: 12.r,
                     color: AppColors.white,
                   ),
                 ),
@@ -550,6 +678,29 @@ class _HomeIconGrid extends StatelessWidget {
   }
 }
 
+List<QuickActionService> _insuranceServicesInDisplayOrder(
+  List<QuickActionService> services,
+) {
+  final remaining = List<QuickActionService>.from(services);
+  QuickActionService? take(bool Function(String name) match) {
+    final index = remaining.indexWhere(
+      (service) => match(service.name.trim().toLowerCase()),
+    );
+    if (index < 0) return null;
+    return remaining.removeAt(index);
+  }
+
+  return [
+    ...[
+      take((name) => name.contains('life')),
+      take((name) => name.contains('health')),
+      take((name) => name.contains('general')),
+      take((name) => name.contains('rent')),
+    ].whereType<QuickActionService>(),
+    ...remaining,
+  ];
+}
+
 class _CurvedIconGrid extends StatelessWidget {
   const _CurvedIconGrid({
     required this.services,
@@ -568,29 +719,32 @@ class _CurvedIconGrid extends StatelessWidget {
     final visibleItems = services.take(maxItems).toList();
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = 10.w;
-        final tileWidth = (constraints.maxWidth - spacing * 3) / 4;
-        final tileHeight = tileWidth * 1.45;
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(4, (index) {
-            final service =
-                index < visibleItems.length ? visibleItems[index] : null;
-            if (service == null) {
-              return SizedBox(width: tileWidth, height: tileHeight);
-            }
-            return SizedBox(
-              width: tileWidth,
-              height: tileHeight,
-              child: _CurvedIconTile(
-                label: labelBuilder?.call(service) ?? service.name,
-                iconUrl: service.icon ?? '',
-                onTap: () async {
-                  await onTap(service.name);
-                },
-              ),
-            );
-          }),
+        final spacing = 12.w;
+        return SizedBox(
+          height: 116.h,
+          child: Row(
+            children: List.generate(4, (index) {
+              final service =
+                  index < visibleItems.length ? visibleItems[index] : null;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: index == 0 ? 0 : spacing / 2,
+                    right: index == 3 ? 0 : spacing / 2,
+                  ),
+                  child: service == null
+                      ? const SizedBox.shrink()
+                      : _CurvedIconTile(
+                          label: labelBuilder?.call(service) ?? service.name,
+                          iconUrl: service.icon ?? '',
+                          onTap: () async {
+                            await onTap(service.name);
+                          },
+                        ),
+                ),
+              );
+            }),
+          ),
         );
       },
     );
@@ -622,10 +776,10 @@ class _CurvedIconTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xffFAFAFA),
           borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: const Color(0xffEAEAEA)),
+          border: Border.all(color: const Color(0xffEAEAEA), width: 0.5),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(14.r),
+          borderRadius: BorderRadius.circular(8.r),
           child: Stack(
             children: [
               Positioned(
@@ -640,42 +794,30 @@ class _CurvedIconTile extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(6.w, 10.h, 6.w, 8.h),
+                padding: EdgeInsets.fromLTRB(8.w, 12.h, 8.w, 12.h),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      height: 50.r,
-                      width: 50.r,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          center: Alignment.center,
-                          radius: 0.5,
-                          colors: [
-                            Color(0xFFF9F9F9),
-                            Color(0xFFF6F6F6),
-                          ],
-                        ),
-                      ),
-                      child: Center(
-                        child: AppNetworkImage(
-                          url: iconUrl,
-                          width: 26.r,
-                          height: 26.r,
+                      height: 40.r,
+                      width: 40.r,
+                      alignment: Alignment.center,
+                      child: AppNetworkImage(
+                        url: iconUrl,
+                        width: 36.r,
+                        height: 36.r,
+                        fit: BoxFit.contain,
+                        showShimmer: false,
+                        errorWidget: Image.asset(
+                          FileConstants.appLogo,
+                          height: 36.r,
+                          width: 36.r,
                           fit: BoxFit.contain,
-                          showShimmer: false,
-                          errorWidget: Image.asset(
-                            FileConstants.appLogo,
-                            height: 26.r,
-                            width: 26.r,
-                            fit: BoxFit.contain,
-                          ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 6.h),
+                    SizedBox(height: 2.h),
                     Flexible(
                       child: Center(
                         child: Text(
@@ -687,7 +829,6 @@ class _CurvedIconTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: 2.h),
                   ],
                 ),
               ),
@@ -735,6 +876,19 @@ class _PayBillsCard extends StatelessWidget {
   }
 
   String _labelForService(QuickActionService service) {
+    final lower = service.name.trim().toLowerCase();
+    if (lower.contains('electric')) return 'Electricity Bill';
+    if (lower.contains('prepaid') ||
+        (lower.contains('mobile') && lower.contains('recharge'))) {
+      return 'Mobile Recharge';
+    }
+    if (lower.contains('fastag') || lower.contains('fast tag')) {
+      return 'FASTag Recharge';
+    }
+    if (lower.contains('book') &&
+        (lower.contains('lpg') || lower.contains('gas'))) {
+      return 'Book LPG';
+    }
     return service.name;
   }
 
@@ -862,16 +1016,16 @@ class _PayBillsCard extends StatelessWidget {
                   ),
                   if (bookGas != null)
                     Positioned(
-                      left: width * 0.32,
-                      right: 0,
+                      left: 112.w,
                       top: height * 0.54,
+                      width: 280.w,
+                      height: 41.h,
                       child: _PromoStrip(
                         asset: FileConstants.bookLpgStrip,
                       ),
                     ),
                   Positioned(
                     right: width * 0.01,
-                    // left: width * 0.01,
                     bottom: height * 0.01,
                     child: _ExploreUtilitiesRow(onTap: onExploreTap),
                   ),
@@ -894,15 +1048,50 @@ class _PromoStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(10),
-        bottomLeft: Radius.circular(10),
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(8.r),
+        bottomLeft: Radius.circular(8.r),
       ),
-      child: Image.asset(
-        asset,
-        height: 30.h,
-        width: double.infinity,
-        fit: BoxFit.cover,
+      child: Container(
+        width: 280.w,
+        height: 41.h,
+        padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h),
+        color: const Color(0xFF193459),
+        child: Transform.translate(
+          offset: Offset(0, -4.h),
+          child: SizedBox(
+            width: 270.w,
+            height: 24.h,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Book LPG • Get ',
+                    style: GoogleFonts.bricolageGrotesque(
+                      color: Colors.white,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      height: 24 / 16,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                  TextSpan(
+                    text: '10% OFF',
+                    style: GoogleFonts.bricolageGrotesque(
+                      color: Colors.white,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w800,
+                      height: 24 / 16,
+                      letterSpacing: 0,
+                    ),
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -916,38 +1105,42 @@ class _ExploreUtilitiesRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10.r),
+      borderRadius: BorderRadius.circular(8.r),
       child: Container(
-        height: 38.h,
-        width: 220.w,
-        padding: EdgeInsets.symmetric(horizontal: 0.w, vertical: 6.h),
+        height: 52.h,
+        width: 270.w,
+        padding: EdgeInsets.fromLTRB(44.w, 12.h, 44.w, 12.h),
         decoration: BoxDecoration(
-          color: const Color(0xFFFBE6DE),
+          color: const Color(0x66FFE2D9),
           borderRadius: BorderRadius.circular(8.r),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Explore All Services',
-              style: GoogleFonts.plusJakartaSans(
-                textStyle: Theme.of(context).textTheme.bodyMedium,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Explore All Utilities',
+                  style: GoogleFonts.bricolageGrotesque(
+                    color: const Color(0xFFDD5428),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16.sp,
+                    height: 1,
+                  ),
+                ),
               ),
             ),
-            SizedBox(width: 8.w),
+            SizedBox(width: 10.w),
             Container(
-              height: 24.r,
-              width: 24.r,
+              height: 22.r,
+              width: 22.r,
               decoration: const BoxDecoration(
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.arrow_forward,
-                size: 14.r,
+                size: 12.r,
                 color: AppColors.white,
               ),
             ),
@@ -1038,19 +1231,19 @@ class _InvestmentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 42.h,
-      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      height: 57.5.h,
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: backgroundGradient == null ? Colors.white : null,
         gradient: backgroundGradient,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: borderColor, width: 1),
+        border: Border.all(color: borderColor, width: 1.4),
       ),
       child: Row(
         children: [
           SizedBox(
-            height: 20.r,
-            width: 20.r,
+            height: 24.r,
+            width: 24.r,
             child: Image.asset(
               iconAsset,
               fit: BoxFit.contain,
@@ -1062,15 +1255,15 @@ class _InvestmentTile extends StatelessWidget {
               label,
               style: GoogleFonts.plusJakartaSans(
                 textStyle: Theme.of(context).textTheme.bodySmall,
-                fontSize: 10.sp,
+                fontSize: 13.sp,
                 fontWeight: FontWeight.w600,
                 color: textColor,
               ),
             ),
           ),
           SizedBox(
-            height: 22.r,
-            width: 22.r,
+            height: 18.r,
+            width: 18.r,
             child: Image.asset(
               arrowAsset,
               fit: BoxFit.contain,
@@ -1083,9 +1276,14 @@ class _InvestmentTile extends StatelessWidget {
 }
 
 class _ImageBanner extends StatelessWidget {
-  const _ImageBanner({required this.asset, required this.height});
+  const _ImageBanner({
+    required this.asset,
+    required this.height,
+    this.fit = BoxFit.contain,
+  });
   final String asset;
   final double height;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -1096,7 +1294,7 @@ class _ImageBanner extends StatelessWidget {
       asset,
       height: height,
       width: double.infinity,
-      fit: BoxFit.contain,
+      fit: fit,
       cacheWidth: cacheWidth,
       filterQuality: FilterQuality.low,
     );
@@ -1109,90 +1307,88 @@ class InsuranceBannerCarousel extends HookWidget {
     required this.onApply,
     this.banners = const [],
     this.isLoading = false,
-    this.placeholderCount = 1,
   });
 
   final VoidCallback onApply;
   final List<BannerModel> banners;
   final bool isLoading;
-  final int placeholderCount;
 
   @override
   Widget build(BuildContext context) {
     final controller = usePageController();
     final currentIndex = useState(0);
+    final total = banners.length;
 
-    final resolvedPlaceholderCount =
-        placeholderCount < 1 ? 1 : placeholderCount;
-    final total = (isLoading || banners.isEmpty)
-        ? resolvedPlaceholderCount
-        : banners.length;
+    useEffect(() {
+      if (total < 2) return null;
+      final timer = Timer.periodic(const Duration(seconds: 3), (_) {
+        if (!controller.hasClients) return;
+        final next = (currentIndex.value + 1) % total;
+        controller.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      });
+      return timer.cancel;
+    }, [total]);
+
+    if (total == 0) return const SizedBox.shrink();
 
     return Stack(
       children: [
-        SizedBox(
-          // height: 128,
-          child: PageView.builder(
-            controller: controller,
-            itemCount: total,
-            onPageChanged: (index) => currentIndex.value = index,
-            itemBuilder: (context, index) {
-              if (isLoading || banners.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: AppNetworkImage(
-                    url: '',
-                    // height: 128,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              }
-
-              final banner = banners[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GestureDetector(
-                  onTap: () => BannerRedirectMapper.handle(
-                    context,
-                    banner.redirectUrl,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: AppNetworkImage(
-                      url: banner.image,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
+        PageView.builder(
+          controller: controller,
+          physics: total > 1
+              ? const BouncingScrollPhysics()
+              : const NeverScrollableScrollPhysics(),
+          itemCount: total,
+          onPageChanged: (index) => currentIndex.value = index,
+          itemBuilder: (context, index) {
+            final banner = banners[index];
+            return GestureDetector(
+              onTap: () => BannerRedirectMapper.handle(
+                context,
+                banner.redirectUrl,
+              ),
+              child: AppNetworkImage(
+                url: banner.image,
+                width: 440.w,
+                height: 180.h,
+                fit: BoxFit.cover,
+                placeholder: AppNetworkImage(
+                  url: '',
+                  width: 440.w,
+                  height: 180.h,
+                ),
+              ),
+            );
+          },
+        ),
+        if (total > 1)
+          Positioned(
+            left: 24.w,
+            bottom: 16.h,
+            child: Row(
+              children: List.generate(
+                total,
+                (index) => Padding(
+                  padding: EdgeInsets.only(right: 5.w),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    height: 6.h,
+                    width: currentIndex.value == index ? 14.w : 6.w,
+                    decoration: BoxDecoration(
+                      color: currentIndex.value == index
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(40.r),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        ///DOTS OVERLAY
-        Positioned(
-          left: 18.w, // match your padding
-          bottom: 5.h, // just below button visually
-          child: Row(
-            children: List.generate(
-              total,
-              (index) => AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                margin: EdgeInsets.only(right: 4.w),
-                height: 6.h,
-                width: currentIndex.value == index ? 14.w : 6.w,
-                decoration: BoxDecoration(
-                  color: currentIndex.value == index
-                      ? Colors.white
-                      : Colors.white.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(10.r),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -1204,12 +1400,14 @@ class _InsuranceBannerItem extends StatelessWidget {
     required this.onApply,
     required this.currentIndex,
     required this.total,
+    this.showPagerDots = true,
   });
 
   final String image;
   final VoidCallback onApply;
   final int currentIndex;
   final int total;
+  final bool showPagerDots;
 
   @override
   Widget build(BuildContext context) {
@@ -1236,7 +1434,7 @@ class _InsuranceBannerItem extends StatelessWidget {
                 Text(
                   'Secure Your Future',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.sp,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
@@ -1245,7 +1443,7 @@ class _InsuranceBannerItem extends StatelessWidget {
                 Text(
                   'Health, Motor & Life Insurance In\nMinutes',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.sp,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
                     color: Colors.white.withOpacity(0.9),
                   ),
@@ -1274,13 +1472,13 @@ class _InsuranceBannerItem extends StatelessWidget {
                         Text(
                           'Apply Now',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.sp,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
                         ),
                         SizedBox(width: 6.w),
-                        Icon(Icons.north_east, size: 12.r, color: Colors.white),
+                        Icon(Icons.north_east, size: 14.r, color: Colors.white),
                       ],
                     ),
                   ),
@@ -1288,6 +1486,7 @@ class _InsuranceBannerItem extends StatelessWidget {
 
                 SizedBox(height: 8.h),
 
+                if (showPagerDots)
                 Row(
                   children: List.generate(
                     total,
@@ -1357,7 +1556,7 @@ class _InsuranceBanner extends StatelessWidget {
                   'Secure Your Future',
                   style: GoogleFonts.plusJakartaSans(
                     textStyle: Theme.of(context).textTheme.bodyLarge,
-                    fontSize: 14.sp,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
@@ -1367,7 +1566,7 @@ class _InsuranceBanner extends StatelessWidget {
                   'Health, Motor & Life Insurance In\nMinutes',
                   style: GoogleFonts.plusJakartaSans(
                     textStyle: Theme.of(context).textTheme.bodySmall,
-                    fontSize: 10.sp,
+                    fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
                     color: Colors.white.withOpacity(0.9),
                   ),
@@ -1397,7 +1596,7 @@ class _InsuranceBanner extends StatelessWidget {
                           'Apply Now',
                           style: GoogleFonts.plusJakartaSans(
                             textStyle: Theme.of(context).textTheme.bodySmall,
-                            fontSize: 10.sp,
+                            fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
                           ),
@@ -1405,7 +1604,7 @@ class _InsuranceBanner extends StatelessWidget {
                         SizedBox(width: 6.w),
                         Icon(
                           Icons.north_east,
-                          size: 12.r,
+                          size: 14.r,
                           color: Colors.white,
                         ),
                         SizedBox(
@@ -1498,6 +1697,9 @@ class _MiniActionCard extends StatelessWidget {
     this.backgroundColor,
     this.borderColor,
     this.gradientBorder,
+    this.iconWidth = 24,
+    this.iconHeight = 24,
+    this.arrowColor = AppColors.primary,
   });
 
   final String title;
@@ -1507,29 +1709,27 @@ class _MiniActionCard extends StatelessWidget {
   final Color? backgroundColor;
   final Color? borderColor;
   final Gradient? gradientBorder;
+  final double iconWidth;
+  final double iconHeight;
+  final Color arrowColor;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
+      borderRadius: BorderRadius.circular(8.r),
       child: Container(
+        width: 188.w,
+        height: 57.5.h,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(8.r),
           gradient: gradientBorder,
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0D000000),
-              blurRadius: 6,
-              offset: Offset(0, 4),
-            ),
-          ],
         ),
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: backgroundColor ?? Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(8.r),
             border: gradientBorder == null
                 ? Border.all(
                     color: borderColor ?? AppColors.lightBorder,
@@ -1542,12 +1742,17 @@ class _MiniActionCard extends StatelessWidget {
               : const EdgeInsets.all(0.5),
           child: Row(
             children: [
-              Image.asset(asset,
-                  height: 20.h, width: 20.h, fit: BoxFit.contain),
-              SizedBox(width: 8.w),
+              Image.asset(
+                asset,
+                height: iconHeight.h,
+                width: iconWidth.w,
+                fit: BoxFit.contain,
+              ),
+              SizedBox(width: 10.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       title,
@@ -1555,6 +1760,7 @@ class _MiniActionCard extends StatelessWidget {
                         textStyle: Theme.of(context).textTheme.bodySmall,
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
+                        fontSize: 13.sp,
                       ),
                     ),
                     SizedBox(height: 2.h),
@@ -1565,18 +1771,26 @@ class _MiniActionCard extends StatelessWidget {
                       style: GoogleFonts.plusJakartaSans(
                         textStyle: Theme.of(context).textTheme.bodySmall,
                         color: AppColors.textPrimary.withOpacity(0.6),
-                        fontSize: 9.sp,
+                        fontSize: 11.sp,
                         height: 1.1,
                       ),
                     ),
                   ],
                 ),
               ),
-              Image.asset(
-                FileConstants.rightArrow,
-                height: 28.r,
-                width: 28.r,
-                fit: BoxFit.contain,
+              Container(
+                height: 24.r,
+                width: 24.r,
+                decoration: BoxDecoration(
+                  color: arrowColor,
+                  borderRadius: BorderRadius.circular(50.r),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.north_east_rounded,
+                  size: 12.r,
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
@@ -1595,18 +1809,18 @@ class _SupportTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
+      borderRadius: BorderRadius.circular(16.r),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: AppColors.lightBorder),
         ),
         child: Row(
           children: [
             Image.asset(FileConstants.faqIcon,
-                height: 20.h, width: 20.h, fit: BoxFit.contain),
+                height: 22.r, width: 22.r, fit: BoxFit.contain),
             SizedBox(width: 10.w),
             Expanded(
               child: Text(
@@ -1615,14 +1829,22 @@ class _SupportTile extends StatelessWidget {
                   textStyle: Theme.of(context).textTheme.bodySmall,
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
+                  fontSize: 13.sp,
                 ),
               ),
             ),
-            Image.asset(
-              FileConstants.rightArrow,
+            Container(
               height: 28.r,
               width: 28.r,
-              fit: BoxFit.contain,
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.north_east_rounded,
+                size: 14.r,
+                color: AppColors.white,
+              ),
             ),
           ],
         ),
@@ -1887,7 +2109,7 @@ class _HomeContent extends HookConsumerWidget {
     final showBannerPlaceholder = topBanners.isEmpty &&
         homeState.errorMessage == null &&
         (homeState.isFetching || quickActions == null);
-    final topBannerHeight = 120.h;
+    final topBannerHeight = 138.h;
     final bannerAreaHeight = (topBanners.isNotEmpty || showBannerPlaceholder)
         ? topBannerHeight
         : 0.h;
@@ -2011,16 +2233,14 @@ class _HomeContent extends HookConsumerWidget {
         ? null
         : findCategory(quickActions, ['insurance', 'rent', 'property']);
 
-    final activeTopBanner = topBanners.isEmpty
-        ? null
-        : topBanners[(topBannerPage.value.clamp(0, topBanners.length - 1))];
-    final topBannerGradient = LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
+    final topBannerGradient = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
       colors: [
-        activeTopBanner?.colorStart ?? const Color(0xFFFF835C),
-        activeTopBanner?.colorEnd ?? const Color(0xFF994F37),
+        Color(0xFFFF835C),
+        Color(0xFF994F37),
       ],
+      stops: [0.0, 0.3807],
     );
 
     return _HomeScaffoldBody(
@@ -2218,16 +2438,28 @@ class _HomeScaffoldBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
+      backgroundColor: const Color(0xFFFF835C),
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Color(0xFFFF835C),
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+        child: Stack(
         children: [
-          Positioned.fill(
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 993.h,
             child: DecoratedBox(
               decoration: BoxDecoration(gradient: topBannerGradient),
             ),
           ),
           RefreshIndicator(
-            color: AppColors.primary,
+            color: Colors.white,
+            backgroundColor: const Color(0xFFFF835C),
+            displacement: 40,
             onRefresh: onRefresh,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -2294,6 +2526,7 @@ class _HomeScaffoldBody extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -2342,12 +2575,19 @@ class _HomeTopSliverAppBar extends StatelessWidget {
       automaticallyImplyLeading: false,
       centerTitle: false,
       titleSpacing: 0,
-      backgroundColor: const Color(0xffD66D4D),
+      backgroundColor: const Color(0xFFFF835C),
+      surfaceTintColor: const Color(0xFFFF835C),
       elevation: 0,
-      toolbarHeight: 54.h,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 80.h,
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFFF835C),
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
       expandedHeight: MediaQuery.of(context).padding.top +
-          36.h +
-          14.h +
+          80.h +
+          18.h +
           bannerAreaHeight +
           (topBanners.length > 1 ? 16.h : 0.h),
       flexibleSpace: FlexibleSpaceBar(
@@ -2358,7 +2598,7 @@ class _HomeTopSliverAppBar extends StatelessWidget {
             padding: EdgeInsets.only(
               left: 16.w,
               right: 16.w,
-              top: MediaQuery.of(context).padding.top + 58.h + 10.h,
+              top: MediaQuery.of(context).padding.top + 80.h + 12.h,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2371,7 +2611,7 @@ class _HomeTopSliverAppBar extends StatelessWidget {
                       url: '',
                       width: double.infinity,
                       height: topBannerHeight,
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(16.r),
                     ),
                   )
                 else if (topBanners.isNotEmpty)
@@ -2391,7 +2631,7 @@ class _HomeTopSliverAppBar extends StatelessWidget {
                               banner.redirectUrl,
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14.r),
+                              borderRadius: BorderRadius.circular(16.r),
                               child: AppNetworkImage(
                                 url: banner.image,
                                 width: double.infinity,
@@ -2427,7 +2667,7 @@ class _HomeTopSliverAppBar extends StatelessWidget {
         ),
       ),
       title: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
         child: _HomeTopBar(
           initials: initials,
           walletBalance: walletBalance,
@@ -2504,15 +2744,15 @@ class _HomeMainSections extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(18.r),
-        topRight: Radius.circular(18.r),
+        topLeft: Radius.circular(20.r),
+        topRight: Radius.circular(20.r),
       ),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(18.r),
-            topRight: Radius.circular(18.r),
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
           ),
           boxShadow: const [
             BoxShadow(
@@ -2525,7 +2765,7 @@ class _HomeMainSections extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 2),
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 16.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2541,61 +2781,78 @@ class _HomeMainSections extends StatelessWidget {
                     onExploreTap: onExploreUtilitiesTap,
                     isCreditCardLoading: isFetchingCreditCards,
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 16.h),
+                  SizedBox(
+                    width: 393.w,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                   const _SectionHeader(title: 'Banking & Investments'),
-                  SizedBox(height: 10.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: onGoldTap,
-                          child: _InvestmentTile(
-                            label: 'Buy Gold',
-                            iconAsset: FileConstants.digitalGoldGif,
-                            arrowAsset: FileConstants.goldArrow,
-                            borderColor: const Color(0xFFE0C46A),
-                            textColor: const Color(0xFF8B6B12),
+                  SizedBox(height: 14.h),
+                  SizedBox(
+                    height: 57.5.h,
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 188.w,
+                          child: GestureDetector(
+                            onTap: onGoldTap,
+                            child: _InvestmentTile(
+                              label: 'Buy Gold',
+                              iconAsset: FileConstants.digitalGoldGif,
+                              arrowAsset: FileConstants.goldArrow,
+                              borderColor: const Color(0xFFD1A903),
+                              textColor: const Color(0xFF8B6B12),
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: onSilverTap,
-                          child: _InvestmentTile(
-                            label: 'Buy Silver',
-                            iconAsset: FileConstants.digitalSilverGif,
-                            arrowAsset: FileConstants.silverArrow,
-                            borderColor: const Color(0xFFE1E1E1),
-                            textColor: const Color(0xFF6B6B6B),
+                        SizedBox(width: 14.w),
+                        SizedBox(
+                          width: 188.w,
+                          child: GestureDetector(
+                            onTap: onSilverTap,
+                            child: _InvestmentTile(
+                              label: 'Buy Silver',
+                              iconAsset: FileConstants.digitalSilverGif,
+                              arrowAsset: FileConstants.silverArrow,
+                              borderColor: const Color(0xFFDDDDDD),
+                              textColor: const Color(0xFF6B6B6B),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
             if (bankingInvestmentBanners.isNotEmpty) ...[
               SizedBox(height: 18.h),
-              InkWell(
-                onTap: onBankingBannerTap,
-                child: SizedBox(
-                  height: 60.h,
-                  width: double.infinity,
-                  child: PageView.builder(
-                    controller: bankingBannerController,
-                    onPageChanged: onBankingBannerPageChanged,
-                    itemCount: bankingInvestmentBanners.length,
-                    itemBuilder: (_, index) => AppNetworkImage(
-                      url: bankingInvestmentBanners[index].image,
-                      width: double.infinity,
-                      height: 60.h,
-                      fit: BoxFit.contain,
-                      placeholder: AppNetworkImage(
-                        url: '',
-                        width: double.infinity,
-                        height: 60.h,
+              Transform.translate(
+                offset: Offset(-1.w, 0),
+                child: InkWell(
+                  onTap: onBankingBannerTap,
+                  child: SizedBox(
+                    height: 73.h,
+                    width: 442.w,
+                    child: PageView.builder(
+                      controller: bankingBannerController,
+                      onPageChanged: onBankingBannerPageChanged,
+                      itemCount: bankingInvestmentBanners.length,
+                      itemBuilder: (_, index) => AppNetworkImage(
+                        url: bankingInvestmentBanners[index].image,
+                        width: 442.w,
+                        height: 73.h,
+                        fit: BoxFit.cover,
+                        placeholder: AppNetworkImage(
+                          url: '',
+                          width: 442.w,
+                          height: 73.h,
+                        ),
                       ),
                     ),
                   ),
@@ -2603,7 +2860,7 @@ class _HomeMainSections extends StatelessWidget {
               ),
             ],
             Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 18.h, 16.w, 0),
+              padding: EdgeInsets.fromLTRB(24.w, 18.h, 24.w, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2613,67 +2870,77 @@ class _HomeMainSections extends StatelessWidget {
                     services: educationServices,
                     onTap: onServiceTap,
                   ),
-                  SizedBox(height: middleBanners.isNotEmpty ? 0.h : 18.h),
+                  SizedBox(height: 20.h),
                 ],
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  if (middleBanners.isNotEmpty) SizedBox(height: 18.h),
-                  if (middleBanners.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12.r),
+                  if (middleBanners.isNotEmpty) ...[
+                    SizedBox(height: 20.h),
+                    Center(
                       child: SizedBox(
-                        height: 110.h,
-                        child: PageView.builder(
-                          controller: middleBannerController,
-                          onPageChanged: onMiddleBannerPageChanged,
-                          itemCount: middleBanners.length,
-                          itemBuilder: (_, index) => GestureDetector(
-                            onTap: () => onMiddleBannerTap(index),
-                            child: AppNetworkImage(
-                              url: middleBanners[index].image,
-                              width: double.infinity,
-                              height: 110.h,
-                              fit: BoxFit.contain,
-                              placeholder: AppNetworkImage(
-                                url: '',
-                                width: double.infinity,
-                                height: 110.h,
+                        width: 393.w,
+                        height: 145.h,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.r),
+                          child: PageView.builder(
+                            controller: middleBannerController,
+                            onPageChanged: onMiddleBannerPageChanged,
+                            itemCount: middleBanners.length,
+                            itemBuilder: (_, index) => GestureDetector(
+                              onTap: () => onMiddleBannerTap(index),
+                              child: AppNetworkImage(
+                                url: middleBanners[index].image,
+                                width: 393.w,
+                                height: 145.h,
+                                fit: BoxFit.cover,
+                                placeholder: AppNetworkImage(
+                                  url: '',
+                                  width: 393.w,
+                                  height: 145.h,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  if (middleBanners.isNotEmpty) SizedBox(height: 6.h),
-                  if (middleBanners.length > 1)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        middleBanners.length,
-                        (index) => Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 3.w),
-                          child: _Dot(active: middleBannerPage == index),
+                    if (middleBanners.length > 1) ...[
+                      SizedBox(height: 6.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          middleBanners.length,
+                          (index) => Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 3.w),
+                            child: _Dot(active: middleBannerPage == index),
+                          ),
                         ),
                       ),
-                    ),
-                  if (middleBanners.isNotEmpty) SizedBox(height: 18.h),
+                    ],
+                    SizedBox(height: 20.h),
+                  ],
                 ],
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 0.h, 16.w, 12.h),
+              padding: EdgeInsets.fromLTRB(24.w, 0.h, 24.w, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _SectionHeader(
-                      title: 'Insurance & Rent', onAction: onMyBillsTap),
+                    title: 'Insurance & Rent',
+                    actionLabel: 'View All',
+                    onAction: onMyBillsTap,
+                  ),
                   SizedBox(height: 12.h),
                   _CurvedIconGrid(
-                    services: insuranceServices,
+                    services: _insuranceServicesInDisplayOrder(
+                      insuranceServices,
+                    ),
                     onTap: onServiceTap,
                     labelBuilder: (service) {
                       final name = service.name.trim();
@@ -2687,50 +2954,62 @@ class _HomeMainSections extends StatelessWidget {
                       return name;
                     },
                   ),
-                  SizedBox(height: 14.h),
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),
-            SizedBox(
-              width: double.infinity,
+            Container(
+              width: 440.w,
+              height: 77.h,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color(0xFFFF9D7E),
+                    Color(0xFF003072),
+                  ],
+                ),
+              ),
               child: _ImageBanner(
                 asset: FileConstants.homeBanner9,
-                height: 60.h,
+                height: 77.h,
+                fit: BoxFit.cover,
               ),
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 0),
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: _MiniActionCard(
-                          title: 'Gift card',
-                          subtitle: 'Gift your friends',
-                          asset: FileConstants.giftGif,
-                          backgroundColor: const Color(0xFFFFF3EE),
-                          gradientBorder: const LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Color(0xFFFF9776),
-                              Color(0xFFDD5428),
-                            ],
-                          ),
-                          onTap: () {},
+                      _MiniActionCard(
+                        title: 'Gift card',
+                        subtitle: 'Gift your friends',
+                        asset: FileConstants.giftIcon,
+                        iconWidth: 22,
+                        iconHeight: 26,
+                        backgroundColor: const Color(0xFFFFF0EC),
+                        gradientBorder: const LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xFFFF9776),
+                            Color(0xFFDD5428),
+                          ],
                         ),
+                        arrowColor: const Color(0xFFDD5428),
+                        onTap: () {},
                       ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: _MiniActionCard(
-                          title: 'Spin & Win',
-                          subtitle: 'Win big prizes',
-                          asset: FileConstants.spinIcon,
-                          backgroundColor: const Color(0xFFEAF2FF),
-                          borderColor: const Color(0xFF002352),
-                          onTap: onSpinTap,
-                        ),
+                      SizedBox(width: 10.w),
+                      _MiniActionCard(
+                        title: 'Spin & Win',
+                        subtitle: 'Spin and win',
+                        asset: FileConstants.spinIcon,
+                        backgroundColor: const Color(0x050554BD),
+                        borderColor: const Color(0x33002352),
+                        arrowColor: const Color(0xFF002352),
+                        onTap: onSpinTap,
                       ),
                     ],
                   ),
@@ -2743,43 +3022,54 @@ class _HomeMainSections extends StatelessWidget {
                 ],
               ),
             ),
-            if (bottomBanners.isNotEmpty) ...[
+            if (bottomBanners.isNotEmpty)
               SizedBox(
-                width: double.infinity,
-                height: 130.h,
-                child: PageView.builder(
-                  controller: bottomBannerController,
-                  onPageChanged: onBottomBannerPageChanged,
-                  itemCount: bottomBanners.length,
-                  itemBuilder: (_, index) => GestureDetector(
-                    onTap: () => onBottomBannerTap(index),
-                    child: AppNetworkImage(
-                      url: bottomBanners[index].image,
-                      width: double.infinity,
-                      height: 130.h,
-                      fit: BoxFit.cover,
-                      placeholder: AppNetworkImage(
-                        url: '',
-                        width: double.infinity,
-                        height: 130.h,
+                width: 440.w,
+                height: 180.h,
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      controller: bottomBannerController,
+                      physics: bottomBanners.length > 1
+                          ? const BouncingScrollPhysics()
+                          : const NeverScrollableScrollPhysics(),
+                      onPageChanged: onBottomBannerPageChanged,
+                      itemCount: bottomBanners.length,
+                      itemBuilder: (_, index) => GestureDetector(
+                        onTap: () => onBottomBannerTap(index),
+                        child: AppNetworkImage(
+                          url: bottomBanners[index].image,
+                          width: 440.w,
+                          height: 180.h,
+                          fit: BoxFit.cover,
+                          placeholder: AppNetworkImage(
+                            url: '',
+                            width: 440.w,
+                            height: 180.h,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    if (bottomBanners.length > 1)
+                      Positioned(
+                        left: 24.w,
+                        bottom: 16.h,
+                        child: Row(
+                          children: List.generate(
+                            bottomBanners.length,
+                            (index) => Padding(
+                              padding: EdgeInsets.only(right: 5.w),
+                              child: _Dot(
+                                active: bottomBannerPage == index,
+                                onBanner: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              SizedBox(height: 6.h),
-              if (bottomBanners.length > 1)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    bottomBanners.length,
-                    (index) => Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 3.w),
-                      child: _Dot(active: bottomBannerPage == index),
-                    ),
-                  ),
-                ),
-            ],
             Container(
               decoration: const BoxDecoration(color: Color(0XFFFDFDFD)),
               child: Padding(
@@ -2787,15 +3077,17 @@ class _HomeMainSections extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      'Powered by',
+                      'Powered By',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textPrimary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
                           ),
                     ),
                     SizedBox(width: 6.w),
                     Image.asset(
                       FileConstants.bharatConnectColor,
-                      height: 25.h,
+                      height: 22.h,
                       fit: BoxFit.contain,
                     ),
                   ],
