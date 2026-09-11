@@ -17,20 +17,28 @@ class HomeIconTile extends StatefulWidget {
     this.onTap,
     this.iconSize = 32,
     this.iconUrl,
+    this.localAsset,
     this.offer,
     this.labelSpacing,
     this.showHalfRing = false,
     this.isLoading = false,
+    this.circleSize,
+    this.circleColor,
+    this.circleBorderColor,
   });
 
   final String label;
   final VoidCallback? onTap;
   final double iconSize;
   final String? iconUrl;
+  final String? localAsset;
   final int? offer;
   final double? labelSpacing;
   final bool showHalfRing;
   final bool isLoading;
+  final double? circleSize;
+  final Color? circleColor;
+  final Color? circleBorderColor;
 
   @override
   State<HomeIconTile> createState() => _HomeIconTileState();
@@ -85,7 +93,7 @@ class _HomeIconTileState extends State<HomeIconTile>
         borderRadius: BorderRadius.circular(12.r),
         onTap: widget.isLoading ? null : widget.onTap,
         child: Column(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Stack(
@@ -112,18 +120,28 @@ class _HomeIconTileState extends State<HomeIconTile>
                     ),
                   ),
                 Container(
-                  height: 64.r,
-                  width: 64.r,
-                  decoration: const BoxDecoration(
+                  height: widget.circleSize ?? 64.r,
+                  width: widget.circleSize ?? 64.r,
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.5,
-                      colors: [
-                        Color(0xFFF9F9F9),
-                        Color(0xFFF6F6F6),
-                      ],
-                    ),
+                    color: widget.circleColor,
+                    gradient: widget.circleColor == null &&
+                            widget.circleBorderColor == null
+                        ? const RadialGradient(
+                            center: Alignment.center,
+                            radius: 0.5,
+                            colors: [
+                              Color(0xFFF9F9F9),
+                              Color(0xFFF6F6F6),
+                            ],
+                          )
+                        : null,
+                    border: widget.circleBorderColor == null
+                        ? null
+                        : Border.all(
+                            color: widget.circleBorderColor!,
+                            width: 1,
+                          ),
                   ),
                   child: Center(
                     child: AnimatedSwitcher(
@@ -140,7 +158,15 @@ class _HomeIconTileState extends State<HomeIconTile>
                                 ),
                               ),
                             )
-                          : AppNetworkImage(
+                          : widget.localAsset != null
+                              ? Image.asset(
+                                  key: const ValueKey('local'),
+                                  widget.localAsset!,
+                                  width: iconSize,
+                                  height: iconSize,
+                                  fit: BoxFit.contain,
+                                )
+                              : AppNetworkImage(
                               key: const ValueKey('icon'),
                               url: widget.iconUrl,
                               width: iconSize,

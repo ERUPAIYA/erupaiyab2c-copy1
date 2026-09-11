@@ -14,6 +14,15 @@ class SearchTextfield extends StatelessWidget {
     this.prefixIcon,
     this.onChange,
     this.onFilterPressed,
+    this.height,
+    this.borderColor,
+    this.focusedBorderColor,
+    this.fillColor,
+    this.borderRadius,
+    this.contentPadding,
+    this.prefixIconSize,
+    this.prefixIconPadding,
+    this.hintFontSize,
   });
 
   final String hintText;
@@ -21,10 +30,31 @@ class SearchTextfield extends StatelessWidget {
   final Widget? prefixIcon;
   final ValueChanged<String>? onChange;
   final VoidCallback? onFilterPressed;
+  final double? height;
+  final Color? borderColor;
+  final Color? focusedBorderColor;
+  final Color? fillColor;
+  final double? borderRadius;
+  final EdgeInsetsGeometry? contentPadding;
+  final double? prefixIconSize;
+  final EdgeInsetsGeometry? prefixIconPadding;
+  final double? hintFontSize;
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<TextEditingValue>(
+    final radius = borderRadius ?? 12.r;
+    final borderSide = BorderSide(
+      color: borderColor ?? AppColors.lightBorder,
+      width: 1,
+    );
+    final focusedSide = BorderSide(
+      color: focusedBorderColor ?? AppColors.primary,
+      width: 1,
+    );
+    final iconSize = prefixIconSize ?? 20.w;
+    final iconPadding = prefixIconPadding ?? EdgeInsets.all(12.w);
+
+    Widget field = ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
         return TextField(
@@ -37,26 +67,35 @@ class SearchTextfield extends StatelessWidget {
           ),
           cursorColor: Colors.black,
           decoration: InputDecoration(
+            isDense: height != null,
             hintText: hintText,
             hintStyle: TextStyle(
               color: AppColors.textPrimary.withOpacity(0.4),
               fontWeight: FontWeight.w400,
-              fontSize: 12.sp,
+              fontSize: hintFontSize ?? 12.sp,
             ),
             prefixIcon: prefixIcon ??
                 Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: iconPadding,
                   child: Image.asset(
                     FileConstants.orangeSearch,
-                    width: 20,
-                    height: 20,
+                    width: iconSize,
+                    height: iconSize,
                     fit: BoxFit.contain,
                   ),
                 ),
+            prefixIconConstraints: height == null
+                ? null
+                : BoxConstraints(
+                    minWidth: iconSize +
+                        iconPadding.resolve(TextDirection.ltr).horizontal,
+                    minHeight: iconSize,
+                    maxHeight: height!,
+                  ),
             suffixIcon: onFilterPressed == null
                 ? (value.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
+                        icon: Icon(Icons.clear, size: 20.sp),
                         onPressed: () {
                           controller.clear();
                           onChange?.call('');
@@ -71,26 +110,30 @@ class SearchTextfield extends StatelessWidget {
                     ),
                   ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: fillColor ?? Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.lightBorder),
+              borderRadius: BorderRadius.circular(radius),
+              borderSide: borderSide,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.lightBorder),
+              borderRadius: BorderRadius.circular(radius),
+              borderSide: borderSide,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderRadius: BorderRadius.circular(radius),
+              borderSide: focusedSide,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
+            contentPadding: contentPadding ??
+                EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 14.h,
+                ),
           ),
         );
       },
     );
+
+    if (height == null) return field;
+    return SizedBox(height: height, child: field);
   }
 }

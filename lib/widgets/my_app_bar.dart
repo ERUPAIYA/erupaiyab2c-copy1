@@ -177,8 +177,15 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                         IconButton(
                           onPressed: onHelp ?? () {},
-                          icon: Icon(
-                            Icons.help_outline,
+                          padding: EdgeInsets.all(8.w),
+                          constraints: BoxConstraints(
+                            minWidth: 40.w,
+                            minHeight: 40.h,
+                          ),
+                          icon: Image.asset(
+                            FileConstants.questionMark,
+                            width: 24.w,
+                            height: 24.h,
                             color: backgroundColor == null
                                 ? Colors.black
                                 : Colors.white,
